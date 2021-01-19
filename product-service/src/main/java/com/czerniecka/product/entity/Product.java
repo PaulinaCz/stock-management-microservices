@@ -28,6 +28,7 @@ public class Product {
     private String category;
     private LocalDateTime lastModified;
 
+    @Type(type="org.hibernate.type.UUIDCharType")
     private UUID supplierId;
 
 }
