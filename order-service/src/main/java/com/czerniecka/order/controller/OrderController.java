@@ -33,11 +33,6 @@ public class OrderController {
 //        return orderById.orElse(null);
 //    }
 
-    @GetMapping("/customer/{customerId}")
-    public List<Order> getOrderByCustomer(@PathVariable UUID customerId){
-        return orderService.findOrdersByCustomer(customerId);
-    }
-
     @GetMapping("/{orderId}")
     public ResponseTemplateVO getOrderWithProduct(@PathVariable UUID orderId){
         return orderService.getOrderWithProduct(orderId);

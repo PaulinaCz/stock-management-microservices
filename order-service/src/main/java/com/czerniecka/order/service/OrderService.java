@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -30,15 +29,10 @@ public class OrderService {
         return orderRepository.findAll();
     }
 
-    public Optional<Order> findOrderById(UUID orderId) {
-
-        return orderRepository.findById(orderId);
-    }
-
-    public List<Order> findOrdersByCustomer(UUID customerId) {
-
-        return orderRepository.findAllByCustomerId(customerId);
-    }
+//    public Optional<Order> findOrderById(UUID orderId) {
+//
+//        return orderRepository.findById(orderId);
+//    }
 
     public Order save(Order order) {
 
