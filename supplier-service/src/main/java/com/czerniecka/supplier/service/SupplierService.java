@@ -1,5 +1,6 @@
 package com.czerniecka.supplier.service;
 
+import com.czerniecka.supplier.controller.NotFoundException;
 import com.czerniecka.supplier.entity.Supplier;
 import com.czerniecka.supplier.repository.SupplierRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,5 +33,15 @@ public class SupplierService {
     public Supplier save(Supplier supplier) {
 
         return supplierRepository.save(supplier);
+    }
+
+    public void updateSupplier(UUID supplierId, Supplier supplier) {
+
+        Supplier s = supplierRepository.findById(supplierId).orElseThrow(NotFoundException::new);
+
+        s.setName(supplier.getName());
+        s.setEmail(supplier.getEmail());
+
+        supplierRepository.save(s);
     }
 }

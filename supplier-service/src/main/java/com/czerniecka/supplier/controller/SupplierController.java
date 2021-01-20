@@ -36,4 +36,11 @@ public class SupplierController {
     public Supplier addSupplier(@RequestBody Supplier supplier){
         return supplierService.save(supplier);
     }
+
+    @PutMapping("/supplier/{supplierId}")
+    public void updateSupplier(@PathVariable UUID supplierId,
+                               @RequestBody Supplier supplier){
+
+        supplierService.updateSupplier(supplierId, supplier);
+    }
 }
