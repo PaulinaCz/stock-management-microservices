@@ -2,6 +2,7 @@ package com.czerniecka.inventory.controller;
 
 import com.czerniecka.inventory.entity.Inventory;
 import com.czerniecka.inventory.service.InventoryService;
+import com.czerniecka.inventory.vo.ResponseTemplateVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +24,11 @@ public class InventoryController {
     @GetMapping("")
     public List<Inventory> getAllInventory(){
         return inventoryService.findAll();
+    }
+
+    @GetMapping("/withProducts")
+    public List<ResponseTemplateVO> getInventoryWithProducts(){
+        return inventoryService.getInventoryWithProducts();
     }
 
 }
