@@ -2,6 +2,7 @@ package com.czerniecka.product.controller;
 
 import com.czerniecka.product.entity.Product;
 import com.czerniecka.product.service.ProductService;
+import com.czerniecka.product.vo.ResponseTemplateVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +31,11 @@ public class ProductController {
         Optional<Product> productById = productService.findProductById(productId);
 
         return productById.orElse(null);
+    }
+
+    @GetMapping("/withSupplier/{productId}")
+    public ResponseTemplateVO getProductWithSupplier(@PathVariable UUID productId){
+        return productService.getProductWithSupplier(productId);
     }
 
     @GetMapping("/category/{category}")
