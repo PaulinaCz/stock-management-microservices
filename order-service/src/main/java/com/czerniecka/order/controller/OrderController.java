@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -36,6 +35,16 @@ public class OrderController {
     @GetMapping("/{orderId}")
     public ResponseTemplateVO getOrderWithProduct(@PathVariable UUID orderId){
         return orderService.getOrderWithProduct(orderId);
+    }
+
+    @GetMapping("/forCustomer/{customerId}")
+    public List<ResponseTemplateVO> getOrdersWithProductsForCustomer(@PathVariable UUID customerId){
+        return orderService.getOrdersWithProductsForCustomer(customerId);
+    }
+
+    @GetMapping("/customer/{customerId}")
+    public List<Order> getAllByCustomerId(@PathVariable UUID customerId){
+        return orderService.findAllByCustomerId(customerId);
     }
 
     @PostMapping("")
