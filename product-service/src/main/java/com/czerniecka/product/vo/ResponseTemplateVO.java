@@ -1,6 +1,6 @@
 package com.czerniecka.product.vo;
 
-import com.czerniecka.product.entity.Product;
+import com.czerniecka.product.dto.ProductDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ResponseTemplateVO {
 
-    private Product product;
+    private ProductDTO productDTO;
     private Supplier supplier;
 }

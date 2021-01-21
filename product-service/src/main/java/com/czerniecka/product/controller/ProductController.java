@@ -1,13 +1,12 @@
 package com.czerniecka.product.controller;
 
-import com.czerniecka.product.entity.Product;
+import com.czerniecka.product.dto.ProductDTO;
 import com.czerniecka.product.service.ProductService;
 import com.czerniecka.product.vo.ResponseTemplateVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -22,15 +21,13 @@ public class ProductController {
     }
 
     @GetMapping("")
-    public List<Product> getAllProducts(){
+    public List<ProductDTO> getAllProducts(){
         return productService.findAll();
     }
 
     @GetMapping("/{productId}")
-    public Product getProductById(@PathVariable UUID productId){
-        Optional<Product> productById = productService.findProductById(productId);
-
-        return productById.orElse(null);
+    public ProductDTO getProductById(@PathVariable UUID productId){
+        return productService.findProductById(productId);
     }
 
     @GetMapping("/withSupplier/{productId}")
@@ -39,24 +36,24 @@ public class ProductController {
     }
 
     @GetMapping("/category/{category}")
-    public List<Product> getProductsByCategory(@PathVariable String category){
+    public List<ProductDTO> getProductsByCategory(@PathVariable String category){
         return productService.findProductsByCategory(category);
     }
 
     @GetMapping("/supplier/{supplierId}")
-    public List<Product> getProductsBySupplier(@PathVariable UUID supplierId){
+    public List<ProductDTO> getProductsBySupplier(@PathVariable UUID supplierId){
         return productService.findProductsBySupplier(supplierId);
     }
 
     @PostMapping("")
-    public Product addProduct(@RequestBody Product product){
-        return productService.save(product);
+    public ProductDTO addProduct(@RequestBody ProductDTO productDTO){
+        return productService.save(productDTO);
     }
 
     @PutMapping("product/{productId}")
     public void updateProduct(@PathVariable UUID productId
-                            , @RequestBody Product product){
+                            , @RequestBody ProductDTO productDTO){
 
-        productService.updateProduct(productId, product);
+        productService.updateProduct(productId, productDTO);
     }
 }

@@ -1,6 +1,8 @@
 package com.czerniecka.product.service;
 
 import com.czerniecka.product.controller.NotFoundException;
+import com.czerniecka.product.dto.ProductDTO;
+import com.czerniecka.product.dto.ProductMapper;
 import com.czerniecka.product.entity.Product;
 import com.czerniecka.product.repository.ProductRepository;
 import com.czerniecka.product.vo.ResponseTemplateVO;
@@ -18,49 +20,60 @@ import java.util.UUID;
 public class ProductService {
 
     private final ProductRepository productRepository;
-
+    private final ProductMapper productMapper;
     private RestTemplate restTemplate;
 
     @Autowired
-    public ProductService(ProductRepository productRepository, RestTemplate restTemplate) {
+    public ProductService(ProductRepository productRepository, ProductMapper productMapper, RestTemplate restTemplate) {
         this.productRepository = productRepository;
+        this.productMapper = productMapper;
         this.restTemplate = restTemplate;
     }
 
-    public List<Product> findAll() {
-        return productRepository.findAll();
+    public List<ProductDTO> findAll() {
+
+        List<Product> all = productRepository.findAll();
+        return productMapper.toProductsDTOs(all);
     }
 
-    public Optional<Product> findProductById(UUID productId) {
-        return productRepository.findById(productId);
+    public ProductDTO findProductById(UUID productId) {
+
+        Optional<Product> byId = productRepository.findById(productId);
+
+        return byId.map(productMapper::toProductDTO).orElse(null);
+
     }
 
-    public Product save(Product product) {
-
-        return productRepository.save(product);
+    public ProductDTO save(ProductDTO productDTO) {
+        Product product = productMapper.toProduct(productDTO);
+        Product saved = productRepository.save(product);
+        return productMapper.toProductDTO(saved);
     }
 
-    public List<Product> findProductsByCategory(String category) {
+    public List<ProductDTO> findProductsByCategory(String category) {
 
-        return productRepository.findAllByCategory(category);
+        List<Product> allByCategory = productRepository.findAllByCategory(category);
+        return productMapper.toProductsDTOs(allByCategory);
     }
 
-    public void updateProduct(UUID productId, Product product) {
+    public void updateProduct(UUID productId, ProductDTO productDTO) {
 
         Product p = productRepository.findById(productId).orElseThrow(NotFoundException::new);
 
-        p.setBuyingPrice(product.getBuyingPrice());
-        p.setSellingPrice(product.getSellingPrice());
-        p.setSupplierId(product.getSupplierId());
+        p.setName(productDTO.getName());
+        p.setBuyingPrice(productDTO.getBuyingPrice());
+        p.setSellingPrice(productDTO.getSellingPrice());
+        p.setSupplierId(productDTO.getSupplierId());
         p.setLastModified(LocalDateTime.now());
-        p.setCategory(product.getCategory());
+        p.setCategory(productDTO.getCategory());
 
         productRepository.save(p);
     }
 
-    public List<Product> findProductsBySupplier(UUID supplierId) {
+    public List<ProductDTO> findProductsBySupplier(UUID supplierId) {
 
-        return productRepository.findAllBySupplierId(supplierId);
+        List<Product> allBySupplierId = productRepository.findAllBySupplierId(supplierId);
+        return productMapper.toProductsDTOs(allBySupplierId);
     }
 
     public ResponseTemplateVO getProductWithSupplier(UUID productId) {
@@ -69,7 +82,7 @@ public class ProductService {
 
         Supplier supplier = restTemplate.getForObject("http://localhost:3003/suppliers/" + product.getSupplierId(),
                                                         Supplier.class);
-        vo.setProduct(product);
+        vo.setProductDTO(productMapper.toProductDTO(product));
         vo.setSupplier(supplier);
 
         return vo;
