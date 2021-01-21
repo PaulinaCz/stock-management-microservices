@@ -22,7 +22,6 @@ public class Product {
     @Type(type="org.hibernate.type.UUIDCharType")
     private UUID id;
     private String name;
-    private String description;
     private BigDecimal buyingPrice;
     private BigDecimal sellingPrice;
     private String category;

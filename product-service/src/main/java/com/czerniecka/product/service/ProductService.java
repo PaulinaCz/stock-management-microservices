@@ -54,7 +54,6 @@ public class ProductService {
         p.setSupplierId(product.getSupplierId());
         p.setLastModified(LocalDateTime.now());
         p.setCategory(product.getCategory());
-        p.setDescription(product.getDescription());
 
         productRepository.save(p);
     }
