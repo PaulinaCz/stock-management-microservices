@@ -1,6 +1,6 @@
 package com.czerniecka.order.vo;
 
-import com.czerniecka.order.entity.Order;
+import com.czerniecka.order.dto.OrderDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ResponseTemplateVO {
 
-    private Order order;
+    private OrderDTO orderDTO;
     private Product product;
 }

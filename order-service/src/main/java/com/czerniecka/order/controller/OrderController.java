@@ -1,6 +1,6 @@
 package com.czerniecka.order.controller;
 
-import com.czerniecka.order.entity.Order;
+import com.czerniecka.order.dto.OrderDTO;
 import com.czerniecka.order.service.OrderService;
 import com.czerniecka.order.vo.ResponseTemplateVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +21,7 @@ public class OrderController {
     }
 
     @GetMapping("")
-    public List<Order> getAllOrders(){
+    public List<OrderDTO> getAllOrders(){
         return orderService.findAll();
     }
 
@@ -43,12 +43,12 @@ public class OrderController {
     }
 
     @GetMapping("/customer/{customerId}")
-    public List<Order> getAllByCustomerId(@PathVariable UUID customerId){
+    public List<OrderDTO> getAllByCustomerId(@PathVariable UUID customerId){
         return orderService.findAllByCustomerId(customerId);
     }
 
     @PostMapping("")
-    public Order addOrder(@RequestBody Order order){
-        return orderService.save(order);
+    public OrderDTO addOrder(@RequestBody OrderDTO orderDTO){
+        return orderService.save(orderDTO);
     }
 }

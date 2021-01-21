@@ -1,5 +1,7 @@
 package com.czerniecka.order.service;
 
+import com.czerniecka.order.dto.OrderDTO;
+import com.czerniecka.order.dto.OrderMapper;
 import com.czerniecka.order.entity.Order;
 import com.czerniecka.order.repository.OrderRepository;
 import com.czerniecka.order.vo.Product;
@@ -16,18 +18,20 @@ import java.util.UUID;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-
+    private final OrderMapper orderMapper;
     private RestTemplate restTemplate;
 
     @Autowired
-    public OrderService(OrderRepository orderRepository, RestTemplate restTemplate) {
+    public OrderService(OrderRepository orderRepository, OrderMapper orderMapper, RestTemplate restTemplate) {
         this.orderRepository = orderRepository;
+        this.orderMapper = orderMapper;
         this.restTemplate = restTemplate;
     }
 
-    public List<Order> findAll() {
+    public List<OrderDTO> findAll() {
 
-        return orderRepository.findAll();
+        List<Order> all = orderRepository.findAll();
+        return orderMapper.toOrdersDTOs(all);
     }
 
 //    public Optional<Order> findOrderById(UUID orderId) {
@@ -35,9 +39,11 @@ public class OrderService {
 //        return orderRepository.findById(orderId);
 //    }
 
-    public Order save(Order order) {
+    public OrderDTO save(OrderDTO orderDTO) {
 
-        return orderRepository.save(order);
+        Order order = orderMapper.toOrder(orderDTO);
+        Order saved = orderRepository.save(order);
+        return orderMapper.toOrderDTO(saved);
     }
 
     public ResponseTemplateVO getOrderWithProduct(UUID orderId) {
@@ -48,7 +54,7 @@ public class OrderService {
                 Product.class);
 
         product.setId(order.getProductId());
-        vo.setOrder(order);
+        vo.setOrderDTO(orderMapper.toOrderDTO(order));
         vo.setProduct(product);
 
         return vo;
@@ -64,15 +70,17 @@ public class OrderService {
                     Product.class);
             ResponseTemplateVO vo = new ResponseTemplateVO();
             product.setId(o.getProductId());
-            vo.setOrder(o);
+            vo.setOrderDTO(orderMapper.toOrderDTO(o));
             vo.setProduct(product);
             result.add(vo);
         }
         return result;
     }
 
-    public List<Order> findAllByCustomerId(UUID customerId) {
+    public List<OrderDTO> findAllByCustomerId(UUID customerId) {
 
-        return orderRepository.findAllByCustomerId(customerId);
+        List<Order> allByCustomerId = orderRepository.findAllByCustomerId(customerId);
+
+        return orderMapper.toOrdersDTOs(allByCustomerId);
     }
 }
