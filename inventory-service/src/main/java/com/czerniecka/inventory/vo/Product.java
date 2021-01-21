@@ -15,7 +15,6 @@ public class Product {
 
     private UUID id;
     private String name;
-    private String description;
     private BigDecimal sellingPrice;
     private BigDecimal buyingPrice;
     private String category;
