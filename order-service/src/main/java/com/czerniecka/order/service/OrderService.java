@@ -47,6 +47,7 @@ public class OrderService {
         Product product = restTemplate.getForObject("http://localhost:3001/products/" + order.getProductId(),
                 Product.class);
 
+        product.setId(order.getProductId());
         vo.setOrder(order);
         vo.setProduct(product);
 
@@ -62,6 +63,7 @@ public class OrderService {
             Product product =  restTemplate.getForObject("http://localhost:3001/products/" + o.getProductId(),
                     Product.class);
             ResponseTemplateVO vo = new ResponseTemplateVO();
+            product.setId(o.getProductId());
             vo.setOrder(o);
             vo.setProduct(product);
             result.add(vo);

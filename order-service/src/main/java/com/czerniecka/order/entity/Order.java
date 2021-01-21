@@ -3,6 +3,7 @@ package com.czerniecka.order.entity;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
@@ -20,6 +21,8 @@ public class Order {
     private UUID id;
     private String paymentType;
     private String orderStatus;
+
+    @CreationTimestamp
     private LocalDateTime orderPlaced;
 
     @Type(type="org.hibernate.type.UUIDCharType")
