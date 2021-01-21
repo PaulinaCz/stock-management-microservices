@@ -24,6 +24,7 @@ public class Order {
 
     @Type(type="org.hibernate.type.UUIDCharType")
     private UUID productId;
+    private int amount;
 
     @Type(type="org.hibernate.type.UUIDCharType")
     private UUID customerId;
