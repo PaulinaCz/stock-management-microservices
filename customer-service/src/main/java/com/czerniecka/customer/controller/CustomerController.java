@@ -1,5 +1,6 @@
 package com.czerniecka.customer.controller;
 
+import com.czerniecka.customer.dto.CustomerDTO;
 import com.czerniecka.customer.entity.Customer;
 import com.czerniecka.customer.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,30 +22,29 @@ public class CustomerController {
     }
 
     @GetMapping("")
-    public List<Customer> getAllCustomers(){
+    public List<CustomerDTO> getAllCustomers(){
 
         return customerService.findAll();
     }
 
     @GetMapping("/{customerId}")
-    public Customer getCustomerById(@PathVariable UUID customerId){
+    public CustomerDTO getCustomerById(@PathVariable UUID customerId){
 
-        Optional<Customer> customerById = customerService.findById(customerId);
+        return customerService.findById(customerId);
 
-        return customerById.orElse(null);
     }
 
     @PostMapping("")
-    public Customer addCustomer(@RequestBody Customer customer){
+    public CustomerDTO addCustomer(@RequestBody CustomerDTO customerDTO){
 
-        return customerService.save(customer);
+        return customerService.save(customerDTO);
     }
 
     @PutMapping("/customer/{customerId}")
     public void updateCustomer(@PathVariable UUID customerId,
-                               @RequestBody Customer customer){
+                               @RequestBody CustomerDTO customerDTO){
 
-        customerService.updateCustomer(customerId, customer);
+        customerService.updateCustomer(customerId, customerDTO);
     }
 }
 
