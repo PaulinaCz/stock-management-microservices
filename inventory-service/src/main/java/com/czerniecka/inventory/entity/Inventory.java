@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -24,5 +25,7 @@ public class Inventory {
     @Type(type="org.hibernate.type.UUIDCharType")
     private UUID productId;
     private int quantity;
+
+    @UpdateTimestamp
     private LocalDateTime lastModified;
 }
