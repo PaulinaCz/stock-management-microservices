@@ -5,11 +5,10 @@ import com.czerniecka.inventory.entity.Inventory;
 import com.czerniecka.inventory.service.InventoryService;
 import com.czerniecka.inventory.vo.ResponseTemplateVO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/inventory")
@@ -32,4 +31,16 @@ public class InventoryController {
         return inventoryService.getInventoryWithProducts();
     }
 
+    @PostMapping("")
+    public InventoryDTO addInventory(@RequestBody InventoryDTO inventoryDTO){
+        return inventoryService.save(inventoryDTO);
+    }
+
+    @PutMapping("/inventory/{inventoryId}")
+    public void updateInventory(@PathVariable UUID inventoryId,
+                                @RequestBody InventoryDTO inventoryDTO){
+
+        inventoryService.updateInventory(inventoryId, inventoryDTO);
+
+    }
 }
