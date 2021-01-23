@@ -1,12 +1,11 @@
 package com.czerniecka.supplier.controller;
 
-import com.czerniecka.supplier.entity.Supplier;
+import com.czerniecka.supplier.dto.SupplierDTO;
 import com.czerniecka.supplier.service.SupplierService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -21,26 +20,24 @@ public class SupplierController {
     }
 
     @GetMapping("")
-    public List<Supplier> getAllSuppliers(){
+    public List<SupplierDTO> getAllSuppliers(){
         return supplierService.findAll();
     }
 
     @GetMapping("{supplierId}")
-    public Supplier getSupplierById(@PathVariable UUID supplierId){
-        Optional<Supplier> supplierById = supplierService.findById(supplierId);
-        return supplierById.orElse(null);
-
+    public SupplierDTO getSupplierById(@PathVariable UUID supplierId){
+        return supplierService.findById(supplierId);
     }
 
     @PostMapping("")
-    public Supplier addSupplier(@RequestBody Supplier supplier){
-        return supplierService.save(supplier);
+    public SupplierDTO addSupplier(@RequestBody SupplierDTO supplierDTO){
+        return supplierService.save(supplierDTO);
     }
 
     @PutMapping("/supplier/{supplierId}")
     public void updateSupplier(@PathVariable UUID supplierId,
-                               @RequestBody Supplier supplier){
+                               @RequestBody SupplierDTO supplierDTO){
 
-        supplierService.updateSupplier(supplierId, supplier);
+        supplierService.updateSupplier(supplierId, supplierDTO);
     }
 }
