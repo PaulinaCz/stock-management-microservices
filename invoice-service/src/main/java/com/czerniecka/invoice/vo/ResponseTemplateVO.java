@@ -1,6 +1,6 @@
 package com.czerniecka.invoice.vo;
 
-import com.czerniecka.invoice.entity.Invoice;
+import com.czerniecka.invoice.dto.InvoiceDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ResponseTemplateVO {
     
-    private Invoice invoice;
+    private InvoiceDTO invoiceDTO;
     private Product product;
 }

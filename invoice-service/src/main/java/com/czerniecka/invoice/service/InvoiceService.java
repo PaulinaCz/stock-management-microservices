@@ -1,5 +1,7 @@
 package com.czerniecka.invoice.service;
 
+import com.czerniecka.invoice.dto.InvoiceDTO;
+import com.czerniecka.invoice.dto.InvoiceMapper;
 import com.czerniecka.invoice.entity.Invoice;
 import com.czerniecka.invoice.repository.InvoiceRepository;
 import com.czerniecka.invoice.vo.Product;
@@ -15,17 +17,20 @@ import java.util.UUID;
 public class InvoiceService {
     
     private final InvoiceRepository invoiceRepository;
+    private final InvoiceMapper invoiceMapper;
     private RestTemplate restTemplate;
 
     @Autowired
-    public InvoiceService(InvoiceRepository invoiceRepository, RestTemplate restTemplate) {
+    public InvoiceService(InvoiceRepository invoiceRepository, InvoiceMapper invoiceMapper, RestTemplate restTemplate) {
         this.invoiceRepository = invoiceRepository;
+        this.invoiceMapper = invoiceMapper;
         this.restTemplate = restTemplate;
     }
 
-    public List<Invoice> findAll() {
-        
-        return invoiceRepository.findAll();
+    public List<InvoiceDTO> findAll() {
+
+        List<Invoice> all = invoiceRepository.findAll();
+        return invoiceMapper.toInvoiceDTOs(all);
     }
 
     public ResponseTemplateVO getInvoiceWithProduct(UUID invoiceId) {
@@ -35,15 +40,15 @@ public class InvoiceService {
         Product product = restTemplate.getForObject("http://localhost:3001/products/" + invoice.getProductId(),
                                                     Product.class);
         
-        vo.setInvoice(invoice);
+        vo.setInvoiceDTO(invoiceMapper.toInvoiceDTO(invoice));
         vo.setProduct(product);
         
         return vo;
         
     }
 
-    public Invoice save(Invoice invoice) {
-        
-        return invoiceRepository.save(invoice);
+    public InvoiceDTO save(InvoiceDTO invoiceDTO) {
+        Invoice invoice = invoiceMapper.toInvoice(invoiceDTO);
+        return invoiceMapper.toInvoiceDTO(invoiceRepository.save(invoice));
     }
 }

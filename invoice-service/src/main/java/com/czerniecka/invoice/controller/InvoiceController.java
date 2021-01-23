@@ -1,6 +1,6 @@
 package com.czerniecka.invoice.controller;
 
-import com.czerniecka.invoice.entity.Invoice;
+import com.czerniecka.invoice.dto.InvoiceDTO;
 import com.czerniecka.invoice.service.InvoiceService;
 import com.czerniecka.invoice.vo.ResponseTemplateVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +21,7 @@ public class InvoiceController {
     }
     
     @GetMapping("")
-    public List<Invoice> getAllInvoices(){
+    public List<InvoiceDTO> getAllInvoices(){
         
         return invoiceService.findAll();
     }
@@ -33,8 +33,8 @@ public class InvoiceController {
     }
 
     @PostMapping("")
-    public Invoice addInvoice(@RequestBody Invoice invoice){
-        return invoiceService.save(invoice);
+    public InvoiceDTO addInvoice(@RequestBody InvoiceDTO invoiceDTO){
+        return invoiceService.save(invoiceDTO);
     }
 
 }
