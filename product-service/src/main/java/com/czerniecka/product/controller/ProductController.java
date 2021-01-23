@@ -50,7 +50,7 @@ public class ProductController {
         return productService.save(productDTO);
     }
 
-    @PutMapping("product/{productId}")
+    @PutMapping("/product/{productId}")
     public void updateProduct(@PathVariable UUID productId
                             , @RequestBody ProductDTO productDTO){
 
