@@ -3,6 +3,7 @@ package com.czerniecka.invoice.entity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.Entity;
@@ -25,6 +26,7 @@ public class Invoice {
     @Type(type="org.hibernate.type.UUIDCharType")
     private UUID productId;
     private int amount;
+    @CreationTimestamp
     private LocalDateTime datePlaced;
 
     @Type(type="org.hibernate.type.UUIDCharType")
