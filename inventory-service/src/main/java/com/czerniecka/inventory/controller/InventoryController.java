@@ -1,5 +1,6 @@
 package com.czerniecka.inventory.controller;
 
+import com.czerniecka.inventory.dto.InventoryDTO;
 import com.czerniecka.inventory.entity.Inventory;
 import com.czerniecka.inventory.service.InventoryService;
 import com.czerniecka.inventory.vo.ResponseTemplateVO;
@@ -22,7 +23,7 @@ public class InventoryController {
     }
 
     @GetMapping("")
-    public List<Inventory> getAllInventory(){
+    public List<InventoryDTO> getAllInventory(){
         return inventoryService.findAll();
     }
 
