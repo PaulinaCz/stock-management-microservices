@@ -1,7 +1,6 @@
 package com.czerniecka.inventory.service;
 
 import com.czerniecka.inventory.InventoryRepository;
-import com.czerniecka.inventory.controller.NotFoundException;
 import com.czerniecka.inventory.dto.InventoryDTO;
 import com.czerniecka.inventory.dto.InventoryMapper;
 import com.czerniecka.inventory.entity.Inventory;
@@ -14,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -57,13 +57,19 @@ public class InventoryService {
         return inventoryMapper.toInventoryDTO(saved);
     }
 
-    public void updateInventory(UUID inventoryId, InventoryDTO inventoryDTO) {
-        Inventory i = inventoryRepository.findById(inventoryId).orElseThrow(NotFoundException::new);
+    public boolean updateInventory(UUID inventoryId, InventoryDTO inventoryDTO) {
+        Optional<Inventory> i = inventoryRepository.findById(inventoryId);
 
-        i.setLastModified(LocalDateTime.now());
-        i.setProductId(inventoryDTO.getProductId());
-        i.setQuantity(inventoryDTO.getQuantity());
+        if(i.isPresent()){
+            Inventory inventory = i.get();
+            inventory.setLastModified(LocalDateTime.now());
+            inventory.setProductId(inventoryDTO.getProductId());
+            inventory.setQuantity(inventoryDTO.getQuantity());
 
-        inventoryRepository.save(i);
+            inventoryRepository.save(inventory);
+            return true;
+        }else{
+            return false;
+        }
     }
 }

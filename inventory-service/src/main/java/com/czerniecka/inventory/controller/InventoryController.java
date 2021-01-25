@@ -5,6 +5,8 @@ import com.czerniecka.inventory.entity.Inventory;
 import com.czerniecka.inventory.service.InventoryService;
 import com.czerniecka.inventory.vo.ResponseTemplateVO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,25 +24,31 @@ public class InventoryController {
     }
 
     @GetMapping("")
-    public List<InventoryDTO> getAllInventory(){
-        return inventoryService.findAll();
+    public ResponseEntity<List<InventoryDTO>> getAllInventory(){
+        List<InventoryDTO> all = inventoryService.findAll();
+        return ResponseEntity.ok(all);
     }
 
     @GetMapping("/withProducts")
-    public List<ResponseTemplateVO> getInventoryWithProducts(){
-        return inventoryService.getInventoryWithProducts();
+    public ResponseEntity<List<ResponseTemplateVO>> getInventoryWithProducts(){
+        List<ResponseTemplateVO> allWithProducts = inventoryService.getInventoryWithProducts();
+        return ResponseEntity.ok(allWithProducts);
     }
 
     @PostMapping("")
-    public InventoryDTO addInventory(@RequestBody InventoryDTO inventoryDTO){
-        return inventoryService.save(inventoryDTO);
+    public ResponseEntity<InventoryDTO> addInventory(@RequestBody InventoryDTO inventoryDTO){
+        InventoryDTO saved = inventoryService.save(inventoryDTO);
+        return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 
     @PutMapping("/inventory/{inventoryId}")
-    public void updateInventory(@PathVariable UUID inventoryId,
+    public ResponseEntity<Void> updateInventory(@PathVariable UUID inventoryId,
                                 @RequestBody InventoryDTO inventoryDTO){
 
-        inventoryService.updateInventory(inventoryId, inventoryDTO);
-
+        if(!inventoryService.updateInventory(inventoryId, inventoryDTO)){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }else{
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        }
     }
 }
