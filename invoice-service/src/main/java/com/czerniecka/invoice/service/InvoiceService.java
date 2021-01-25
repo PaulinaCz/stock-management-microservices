@@ -44,6 +44,7 @@ public class InvoiceService {
             Product product = restTemplate.getForObject("http://localhost:3001/products/" + invoice.getProductId(),
                     Product.class);
 
+            product.setId(invoice.getProductId());
             vo.setInvoiceDTO(invoiceMapper.toInvoiceDTO(invoice));
             vo.setProduct(product);
 
