@@ -3,9 +3,12 @@ package com.czerniecka.supplier.controller;
 import com.czerniecka.supplier.dto.SupplierDTO;
 import com.czerniecka.supplier.service.SupplierService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -20,24 +23,33 @@ public class SupplierController {
     }
 
     @GetMapping("")
-    public List<SupplierDTO> getAllSuppliers(){
-        return supplierService.findAll();
+    public ResponseEntity<List<SupplierDTO>> getAllSuppliers(){
+        List<SupplierDTO> all = supplierService.findAll();
+        return ResponseEntity.ok(all);
     }
 
-    @GetMapping("{supplierId}")
-    public SupplierDTO getSupplierById(@PathVariable UUID supplierId){
-        return supplierService.findById(supplierId);
+    @GetMapping("/{supplierId}")
+    public ResponseEntity getSupplierById(@PathVariable UUID supplierId){
+        Optional<SupplierDTO> supplier = supplierService.findSupplierById(supplierId);
+
+        return supplier.map(supplierDTO -> new ResponseEntity(supplierDTO, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity(HttpStatus.NOT_FOUND));
     }
 
     @PostMapping("")
-    public SupplierDTO addSupplier(@RequestBody SupplierDTO supplierDTO){
-        return supplierService.save(supplierDTO);
+    public ResponseEntity<SupplierDTO> addSupplier(@RequestBody SupplierDTO supplierDTO){
+        SupplierDTO saved = supplierService.save(supplierDTO);
+        return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 
     @PutMapping("/supplier/{supplierId}")
-    public void updateSupplier(@PathVariable UUID supplierId,
+    public ResponseEntity<Void> updateSupplier(@PathVariable UUID supplierId,
                                @RequestBody SupplierDTO supplierDTO){
 
-        supplierService.updateSupplier(supplierId, supplierDTO);
+        if(!supplierService.updateSupplier(supplierId, supplierDTO)){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }else{
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        }
     }
 }

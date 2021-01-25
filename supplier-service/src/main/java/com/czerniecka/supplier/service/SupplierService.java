@@ -1,6 +1,5 @@
 package com.czerniecka.supplier.service;
 
-import com.czerniecka.supplier.controller.NotFoundException;
 import com.czerniecka.supplier.dto.SupplierDTO;
 import com.czerniecka.supplier.dto.SupplierMapper;
 import com.czerniecka.supplier.entity.Supplier;
@@ -30,11 +29,10 @@ public class SupplierService {
         return supplierMapper.toSuppliersDTOs(all);
     }
 
-    public SupplierDTO findById(UUID supplierId) {
+    public Optional<SupplierDTO> findSupplierById(UUID supplierId) {
 
         Optional<Supplier> byId = supplierRepository.findById(supplierId);
-
-        return byId.map(supplierMapper::toSupplierDTO).orElse(null);
+        return byId.map(supplierMapper::toSupplierDTO);
     }
 
     public SupplierDTO save(SupplierDTO supplierDTO) {
@@ -44,13 +42,19 @@ public class SupplierService {
         return supplierMapper.toSupplierDTO(saved);
     }
 
-    public void updateSupplier(UUID supplierId, SupplierDTO supplierDTO) {
+    public boolean updateSupplier(UUID supplierId, SupplierDTO supplierDTO) {
 
-        Supplier s = supplierRepository.findById(supplierId).orElseThrow(NotFoundException::new);
+        Optional<Supplier> s = supplierRepository.findById(supplierId);
 
-        s.setName(supplierDTO.getName());
-        s.setEmail(supplierDTO.getEmail());
+        if(s.isPresent()){
+            Supplier supplier = s.get();
+            supplier.setName(supplierDTO.getName());
+            supplier.setEmail(supplierDTO.getEmail());
 
-        supplierRepository.save(s);
+            supplierRepository.save(supplier);
+            return true;
+        }else{
+            return false;
+        }
     }
 }
