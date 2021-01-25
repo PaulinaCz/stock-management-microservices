@@ -1,6 +1,5 @@
 package com.czerniecka.customer.service;
 
-import com.czerniecka.customer.controller.NotFoundException;
 import com.czerniecka.customer.dto.CustomerDTO;
 import com.czerniecka.customer.dto.CustomerMapper;
 import com.czerniecka.customer.entity.Customer;
@@ -30,11 +29,10 @@ public class CustomerService {
         return customerMapper.toCustomersDTOs(all);
     }
 
-    public CustomerDTO findById(UUID customerId) {
+    public Optional<CustomerDTO> findSupplierById(UUID customerId) {
 
         Optional<Customer> byId = customerRepository.findById(customerId);
-
-        return byId.map(customerMapper::toCustomerDTO).orElse(null);
+        return byId.map(customerMapper::toCustomerDTO);
     }
 
     public CustomerDTO save(CustomerDTO customerDTO) {
@@ -44,14 +42,19 @@ public class CustomerService {
         return customerMapper.toCustomerDTO(saved);
     }
 
-    public void updateCustomer(UUID customerId, CustomerDTO customerDTO) {
+    public boolean updateCustomer(UUID customerId, CustomerDTO customerDTO) {
 
-        Customer c = customerRepository.findById(customerId).orElseThrow(NotFoundException::new);
+        Optional<Customer> c = customerRepository.findById(customerId);
 
-        c.setName(customerDTO.getName());
-        c.setEmail(customerDTO.getEmail());
+        if(c.isPresent()){
+            Customer customer = c.get();
+            customer.setName(customerDTO.getName());
+            customer.setEmail(customerDTO.getEmail());
 
-        customerRepository.save(c);
-
+            customerRepository.save(customer);
+            return true;
+        }else{
+            return false;
+        }
     }
 }

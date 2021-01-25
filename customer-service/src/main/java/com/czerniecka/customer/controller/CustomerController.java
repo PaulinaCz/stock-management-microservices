@@ -1,9 +1,10 @@
 package com.czerniecka.customer.controller;
 
 import com.czerniecka.customer.dto.CustomerDTO;
-import com.czerniecka.customer.entity.Customer;
 import com.czerniecka.customer.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,29 +23,34 @@ public class CustomerController {
     }
 
     @GetMapping("")
-    public List<CustomerDTO> getAllCustomers(){
-
-        return customerService.findAll();
+    public ResponseEntity<List<CustomerDTO>> getAllCustomers(){
+        List<CustomerDTO> all = customerService.findAll();
+        return ResponseEntity.ok(all);
     }
 
     @GetMapping("/{customerId}")
-    public CustomerDTO getCustomerById(@PathVariable UUID customerId){
+    public ResponseEntity getCustomerById(@PathVariable UUID customerId){
+        Optional<CustomerDTO> customer = customerService.findSupplierById(customerId);
 
-        return customerService.findById(customerId);
-
+        return customer.map(customerDTO -> new ResponseEntity(customerDTO, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity(HttpStatus.NOT_FOUND));
     }
 
     @PostMapping("")
-    public CustomerDTO addCustomer(@RequestBody CustomerDTO customerDTO){
-
-        return customerService.save(customerDTO);
+    public ResponseEntity<CustomerDTO> addCustomer(@RequestBody CustomerDTO customerDTO){
+        CustomerDTO saved = customerService.save(customerDTO);
+        return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 
     @PutMapping("/customer/{customerId}")
-    public void updateCustomer(@PathVariable UUID customerId,
+    public ResponseEntity<Void> updateCustomer(@PathVariable UUID customerId,
                                @RequestBody CustomerDTO customerDTO){
 
-        customerService.updateCustomer(customerId, customerDTO);
+        if(!customerService.updateCustomer(customerId, customerDTO)){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }else{
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        }
     }
 }
 
