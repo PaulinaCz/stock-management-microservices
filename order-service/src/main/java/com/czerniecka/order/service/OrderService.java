@@ -52,7 +52,7 @@ public class OrderService {
                     Product.class);
 
             product.setId(order.getProductId());
-            vo.setOrderDTO(orderMapper.toOrderDTO(order));
+            vo.setOrder(orderMapper.toOrderDTO(order));
             vo.setProduct(product);
 
             return Optional.of(vo);
@@ -71,7 +71,7 @@ public class OrderService {
                     Product.class);
             ResponseTemplateVO vo = new ResponseTemplateVO();
             product.setId(o.getProductId());
-            vo.setOrderDTO(orderMapper.toOrderDTO(o));
+            vo.setOrder(orderMapper.toOrderDTO(o));
             vo.setProduct(product);
             result.add(vo);
         }
