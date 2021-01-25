@@ -14,6 +14,4 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 
     List<Product> findAllBySupplierId(UUID supplierId);
 
-    Product findProductById(UUID productId);
-
 }

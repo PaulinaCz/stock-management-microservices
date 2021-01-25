@@ -1,6 +1,5 @@
 package com.czerniecka.product.service;
 
-import com.czerniecka.product.controller.NotFoundException;
 import com.czerniecka.product.dto.ProductDTO;
 import com.czerniecka.product.dto.ProductMapper;
 import com.czerniecka.product.entity.Product;
@@ -36,11 +35,10 @@ public class ProductService {
         return productMapper.toProductsDTOs(all);
     }
 
-    public ProductDTO findProductById(UUID productId) {
+    public Optional<ProductDTO> findProductById(UUID productId) {
 
         Optional<Product> byId = productRepository.findById(productId);
-
-        return byId.map(productMapper::toProductDTO).orElse(null);
+        return byId.map(productMapper::toProductDTO);
 
     }
 
@@ -56,18 +54,25 @@ public class ProductService {
         return productMapper.toProductsDTOs(allByCategory);
     }
 
-    public void updateProduct(UUID productId, ProductDTO productDTO) {
+    public boolean updateProduct(UUID productId, ProductDTO productDTO) {
 
-        Product p = productRepository.findById(productId).orElseThrow(NotFoundException::new);
+        Optional<Product> p = productRepository.findById(productId);
 
-        p.setName(productDTO.getName());
-        p.setBuyingPrice(productDTO.getBuyingPrice());
-        p.setSellingPrice(productDTO.getSellingPrice());
-        p.setSupplierId(productDTO.getSupplierId());
-        p.setLastModified(LocalDateTime.now());
-        p.setCategory(productDTO.getCategory());
+        if(p.isPresent()){
+            Product product = p.get();
+            product.setName(productDTO.getName());
+            product.setBuyingPrice(productDTO.getBuyingPrice());
+            product.setSellingPrice(productDTO.getSellingPrice());
+            product.setSupplierId(productDTO.getSupplierId());
+            product.setLastModified(LocalDateTime.now());
+            product.setCategory(productDTO.getCategory());
+            productRepository.save(product);
 
-        productRepository.save(p);
+            return true;
+        }else{
+            return false;
+        }
+
     }
 
     public List<ProductDTO> findProductsBySupplier(UUID supplierId) {
@@ -76,15 +81,18 @@ public class ProductService {
         return productMapper.toProductsDTOs(allBySupplierId);
     }
 
-    public ResponseTemplateVO getProductWithSupplier(UUID productId) {
+    public Optional<ResponseTemplateVO> getProductWithSupplier(UUID productId) {
         ResponseTemplateVO vo = new ResponseTemplateVO();
-        Product product = productRepository.findProductById(productId);
+        Optional<Product> product = productRepository.findById(productId);
 
-        Supplier supplier = restTemplate.getForObject("http://localhost:3003/suppliers/" + product.getSupplierId(),
-                                                        Supplier.class);
-        vo.setProductDTO(productMapper.toProductDTO(product));
-        vo.setSupplier(supplier);
-
-        return vo;
+        if(product.isPresent()){
+            Supplier supplier = restTemplate.getForObject("http://localhost:3003/suppliers/" + product.get().getSupplierId(),
+                    Supplier.class);
+            vo.setProductDTO(productMapper.toProductDTO(product.get()));
+            vo.setSupplier(supplier);
+            return Optional.of(vo);
+        }else{
+            return Optional.empty();
+        }
     }
 }
