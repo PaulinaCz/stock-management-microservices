@@ -88,7 +88,7 @@ public class ProductService {
         if(product.isPresent()){
             Supplier supplier = restTemplate.getForObject("http://localhost:3003/suppliers/" + product.get().getSupplierId(),
                     Supplier.class);
-            vo.setProductDTO(productMapper.toProductDTO(product.get()));
+            vo.setProduct(productMapper.toProductDTO(product.get()));
             vo.setSupplier(supplier);
             return Optional.of(vo);
         }else{

@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ResponseTemplateVO {
 
-    private ProductDTO productDTO;
+    private ProductDTO product;
     private Supplier supplier;
 }
