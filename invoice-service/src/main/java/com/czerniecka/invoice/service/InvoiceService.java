@@ -45,7 +45,7 @@ public class InvoiceService {
                     Product.class);
 
             product.setId(invoice.getProductId());
-            vo.setInvoiceDTO(invoiceMapper.toInvoiceDTO(invoice));
+            vo.setInvoice(invoiceMapper.toInvoiceDTO(invoice));
             vo.setProduct(product);
 
             return Optional.of(vo);
