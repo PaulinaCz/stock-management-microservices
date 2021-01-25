@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -34,6 +35,13 @@ public class InventoryController {
         return ResponseEntity.ok(allWithProducts);
     }
 
+    @GetMapping("/{inventoryId}")
+    public ResponseEntity<ResponseTemplateVO> getInventoryById(@PathVariable UUID inventoryId){
+        Optional<ResponseTemplateVO> inventoryById = inventoryService.findInventoryById(inventoryId);
+        return inventoryById.map(responseTemplateVO -> new ResponseEntity<>(responseTemplateVO, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
     @PostMapping("")
     public ResponseEntity<InventoryDTO> addInventory(@RequestBody InventoryDTO inventoryDTO){
         InventoryDTO saved = inventoryService.save(inventoryDTO);
@@ -50,4 +58,5 @@ public class InventoryController {
             return new ResponseEntity<>(HttpStatus.CREATED);
         }
     }
+
 }

@@ -7,6 +7,7 @@ import com.czerniecka.inventory.entity.Inventory;
 import com.czerniecka.inventory.vo.Product;
 import com.czerniecka.inventory.vo.ResponseTemplateVO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -51,6 +52,22 @@ public class InventoryService {
         return result;
     }
 
+    public Optional<ResponseTemplateVO> findInventoryById(UUID inventoryId) {
+        Optional<Inventory> i = inventoryRepository.findById(inventoryId);
+        ResponseTemplateVO vo = new ResponseTemplateVO();
+
+        if(i.isPresent()){
+            Inventory inventory = i.get();
+            Product product = restTemplate.getForObject("http://localhost:3001/products/" + inventory.getProductId(),
+                    Product.class);
+            vo.setInventoryDTO(inventoryMapper.toInventoryDTO(inventory));
+            vo.setProduct(product);
+            return Optional.of(vo);
+        }else{
+            return Optional.empty();
+        }
+    }
+
     public InventoryDTO save(InventoryDTO inventoryDTO) {
         Inventory inventory = inventoryMapper.toInventory(inventoryDTO);
         Inventory saved = inventoryRepository.save(inventory);
@@ -72,4 +89,6 @@ public class InventoryService {
             return false;
         }
     }
+
+
 }
