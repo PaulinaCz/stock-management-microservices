@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -33,18 +34,23 @@ public class InvoiceService {
         return invoiceMapper.toInvoiceDTOs(all);
     }
 
-    public ResponseTemplateVO getInvoiceWithProduct(UUID invoiceId) {
+    public Optional<ResponseTemplateVO> getInvoiceWithProduct(UUID invoiceId) {
         ResponseTemplateVO vo = new ResponseTemplateVO();
         
-        Invoice invoice = invoiceRepository.findInvoiceById(invoiceId);
-        Product product = restTemplate.getForObject("http://localhost:3001/products/" + invoice.getProductId(),
-                                                    Product.class);
-        
-        vo.setInvoiceDTO(invoiceMapper.toInvoiceDTO(invoice));
-        vo.setProduct(product);
-        
-        return vo;
-        
+        Optional<Invoice> i = invoiceRepository.findById(invoiceId);
+
+        if(i.isPresent()){
+            Invoice invoice = i.get();
+            Product product = restTemplate.getForObject("http://localhost:3001/products/" + invoice.getProductId(),
+                    Product.class);
+
+            vo.setInvoiceDTO(invoiceMapper.toInvoiceDTO(invoice));
+            vo.setProduct(product);
+
+            return Optional.of(vo);
+        }else{
+            return Optional.empty();
+        }
     }
 
     public InvoiceDTO save(InvoiceDTO invoiceDTO) {
