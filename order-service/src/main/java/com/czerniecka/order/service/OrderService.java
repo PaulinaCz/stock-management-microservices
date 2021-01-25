@@ -12,6 +12,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -34,11 +35,6 @@ public class OrderService {
         return orderMapper.toOrdersDTOs(all);
     }
 
-//    public Optional<Order> findOrderById(UUID orderId) {
-//
-//        return orderRepository.findById(orderId);
-//    }
-
     public OrderDTO save(OrderDTO orderDTO) {
 
         Order order = orderMapper.toOrder(orderDTO);
@@ -46,18 +42,23 @@ public class OrderService {
         return orderMapper.toOrderDTO(saved);
     }
 
-    public ResponseTemplateVO getOrderWithProduct(UUID orderId) {
+    public Optional<ResponseTemplateVO> getOrderWithProduct(UUID orderId) {
         ResponseTemplateVO vo = new ResponseTemplateVO();
-        Order order = orderRepository.findOrderById(orderId);
+        Optional<Order> o = orderRepository.findById(orderId);
 
-        Product product = restTemplate.getForObject("http://localhost:3001/products/" + order.getProductId(),
-                Product.class);
+        if(o.isPresent()){
+            Order order = o.get();
+            Product product = restTemplate.getForObject("http://localhost:3001/products/" + order.getProductId(),
+                    Product.class);
 
-        product.setId(order.getProductId());
-        vo.setOrderDTO(orderMapper.toOrderDTO(order));
-        vo.setProduct(product);
+            product.setId(order.getProductId());
+            vo.setOrderDTO(orderMapper.toOrderDTO(order));
+            vo.setProduct(product);
 
-        return vo;
+            return Optional.of(vo);
+        }else{
+            return Optional.empty();
+        }
     }
 
     public List<ResponseTemplateVO> getOrdersWithProductsForCustomer(UUID customerId) {
@@ -76,11 +77,11 @@ public class OrderService {
         }
         return result;
     }
-
-    public List<OrderDTO> findAllByCustomerId(UUID customerId) {
-
-        List<Order> allByCustomerId = orderRepository.findAllByCustomerId(customerId);
-
-        return orderMapper.toOrdersDTOs(allByCustomerId);
-    }
+//
+//    public List<OrderDTO> findAllByCustomerId(UUID customerId) {
+//
+//        List<Order> allByCustomerId = orderRepository.findAllByCustomerId(customerId);
+//
+//        return orderMapper.toOrdersDTOs(allByCustomerId);
+//    }
 }

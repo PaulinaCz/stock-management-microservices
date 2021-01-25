@@ -4,9 +4,12 @@ import com.czerniecka.order.dto.OrderDTO;
 import com.czerniecka.order.service.OrderService;
 import com.czerniecka.order.vo.ResponseTemplateVO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -21,34 +24,34 @@ public class OrderController {
     }
 
     @GetMapping("")
-    public List<OrderDTO> getAllOrders(){
-        return orderService.findAll();
-    }
+    public ResponseEntity<List<OrderDTO>> getAllOrders(){
+        List<OrderDTO> orders = orderService.findAll();
+        return ResponseEntity.ok(orders);
 
-//
-//    @GetMapping("/{orderId}")
-//    public Order getOrderById(@PathVariable UUID orderId){
-//        Optional<Order> orderById = orderService.findOrderById(orderId);
-//        return orderById.orElse(null);
-//    }
+    }
 
     @GetMapping("/{orderId}")
-    public ResponseTemplateVO getOrderWithProduct(@PathVariable UUID orderId){
-        return orderService.getOrderWithProduct(orderId);
-    }
+    public ResponseEntity<ResponseTemplateVO> getOrderWithProduct(@PathVariable UUID orderId){
+        Optional<ResponseTemplateVO> orderWithProduct = orderService.getOrderWithProduct(orderId);
 
-    @GetMapping("/forCustomer/{customerId}")
-    public List<ResponseTemplateVO> getOrdersWithProductsForCustomer(@PathVariable UUID customerId){
-        return orderService.getOrdersWithProductsForCustomer(customerId);
+        return orderWithProduct.map(responseTemplateVO -> new ResponseEntity<>(responseTemplateVO, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @GetMapping("/customer/{customerId}")
-    public List<OrderDTO> getAllByCustomerId(@PathVariable UUID customerId){
-        return orderService.findAllByCustomerId(customerId);
+    public ResponseEntity<List<ResponseTemplateVO>> getOrdersWithProductsForCustomer(@PathVariable UUID customerId){
+        List<ResponseTemplateVO> orders = orderService.getOrdersWithProductsForCustomer(customerId);
+        return ResponseEntity.ok(orders);
     }
+//
+//    @GetMapping("/customer/{customerId}")
+//    public List<OrderDTO> getAllByCustomerId(@PathVariable UUID customerId){
+//        return orderService.findAllByCustomerId(customerId);
+//    }
 
     @PostMapping("")
-    public OrderDTO addOrder(@RequestBody OrderDTO orderDTO){
-        return orderService.save(orderDTO);
+    public ResponseEntity<OrderDTO> addOrder(@RequestBody OrderDTO orderDTO){
+        OrderDTO saved = orderService.save(orderDTO);
+        return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 }
