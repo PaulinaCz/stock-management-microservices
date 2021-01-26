@@ -37,13 +37,12 @@ public class ProductService {
         return productMapper.toProductsDTOs(all);
     }
 
-//    public Optional<ProductDTO> findProductById(UUID productId) {
-//
-//        Optional<Product> byId = productRepository.findById(productId);
-//        return byId.map(productMapper::toProductDTO);
-//
-//    }
+    public Optional<ProductDTO> findProductById(UUID productId) {
 
+        Optional<Product> byId = productRepository.findById(productId);
+        return byId.map(productMapper::toProductDTO);
+
+    }
 
     public List<ProductDTO> findProductsByCategory(String category) {
 

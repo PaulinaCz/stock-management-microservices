@@ -31,16 +31,16 @@ public class ProductController {
         return ResponseEntity.ok(products);
 
     }
-//
-//    @GetMapping("/{productId}")
-//    public ResponseEntity<ProductDTO> getProductById(@PathVariable UUID productId) {
-//        Optional<ProductDTO> product = productService.findProductById(productId);
-//
-//        return product.map(productDTO -> new ResponseEntity<>(productDTO, HttpStatus.OK))
-//                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-//    }
 
     @GetMapping("/{productId}")
+    public ResponseEntity<ProductDTO> getProductById(@PathVariable UUID productId) {
+        Optional<ProductDTO> product = productService.findProductById(productId);
+
+        return product.map(productDTO -> new ResponseEntity<>(productDTO, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @GetMapping("/{productId}/supplier")
     public ResponseEntity getProductWithSupplier(@PathVariable UUID productId) {
         Optional<ResponseTemplateVO> productWithSupplier = productService.getProductWithSupplier(productId);
 
