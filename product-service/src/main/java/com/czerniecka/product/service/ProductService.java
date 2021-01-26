@@ -74,12 +74,12 @@ public class ProductService {
 
     public ProductDTO save(InventoryRequest request) {
         Product product = productMapper.toProduct(request.getProduct());
+        Product saved = productRepository.save(product);
 
         Inventory inventory = request.getInventory();
         inventory.setProductId(product.getId());
         inventory.setQuantity(0);
         restTemplate.postForObject("http://localhost:3005/inventory", inventory, Inventory.class);
-        Product saved = productRepository.save(product);
 
         return productMapper.toProductDTO(saved);
     }
