@@ -43,7 +43,7 @@ public class OrderService {
 
         if(o.isPresent()){
             Order order = o.get();
-            Product product = restTemplate.getForObject("http://localhost:3001/products/" + order.getProductId(),
+            Product product = restTemplate.getForObject("http://product-service/products/" + order.getProductId(),
                     Product.class);
 
             product.setId(order.getProductId());
@@ -62,7 +62,7 @@ public class OrderService {
 
         for (Order o : orders
              ) {
-            Product product =  restTemplate.getForObject("http://localhost:3001/products/" + o.getProductId(),
+            Product product =  restTemplate.getForObject("http://product-service/products/" + o.getProductId(),
                     Product.class);
             ResponseTemplateVO vo = new ResponseTemplateVO();
             product.setId(o.getProductId());
@@ -77,10 +77,10 @@ public class OrderService {
         Order order = orderMapper.toOrder(orderDTO);
         // update inventory -> remove items from stock
 
-        Inventory inventory = restTemplate.getForObject("http://localhost:3005/inventory/product/" + order.getProductId()
+        Inventory inventory = restTemplate.getForObject("http://inventory-service/inventory/product/" + order.getProductId()
                 ,Inventory.class);
         inventory.setQuantity(inventory.getQuantity() - order.getAmount());
-        restTemplate.put("http://localhost:3005/inventory/inventory/" + inventory.getId(), inventory, Inventory.class);
+        restTemplate.put("http://inventory-service/inventory/inventory/" + inventory.getId(), inventory, Inventory.class);
         Order saved = orderRepository.save(order);
 
         return orderMapper.toOrderDTO(saved);
