@@ -5,13 +5,13 @@ import com.czerniecka.order.dto.OrderMapper;
 import com.czerniecka.order.entity.Order;
 import com.czerniecka.order.repository.OrderRepository;
 import com.czerniecka.order.vo.Inventory;
-import com.czerniecka.order.vo.InventoryRequest;
 import com.czerniecka.order.vo.Product;
 import com.czerniecka.order.vo.ResponseTemplateVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -73,20 +73,15 @@ public class OrderService {
         return result;
     }
 
-    /*
-    * Should there be one inventory for each product?
-    * That would prevent having "minus" amout of products after customer places order.
-    * Or item availability will be decided on sum of inventoriesByProduct?
-    * */
-
-    public OrderDTO save(InventoryRequest request) {
-        Order order = orderMapper.toOrder(request.getOrder());
+    public OrderDTO save(OrderDTO orderDTO) {
+        Order order = orderMapper.toOrder(orderDTO);
         // update inventory -> remove items from stock
 
-        Inventory inventory = request.getInventory();
-        inventory.setProductId(order.getProductId());
-        inventory.setQuantity(- order.getAmount());
-        restTemplate.postForObject("http://localhost:3005/inventory", inventory, Inventory.class);
+        Inventory inventory = restTemplate.getForObject("http://localhost:3005/inventory/product/" + order.getProductId()
+                ,Inventory.class);
+        inventory.setLastModified(LocalDateTime.now());
+        inventory.setQuantity(inventory.getQuantity() - order.getAmount());
+        restTemplate.put("http://localhost:3005/inventory/" + inventory.getId(), inventory, Inventory.class);
         Order saved = orderRepository.save(order);
 
         return orderMapper.toOrderDTO(saved);
