@@ -43,7 +43,7 @@ public class InvoiceService {
 
         if(i.isPresent()){
             Invoice invoice = i.get();
-            Product product = restTemplate.getForObject("http://localhost:3001/products/" + invoice.getProductId(),
+            Product product = restTemplate.getForObject("http://product-service/products/" + invoice.getProductId(),
                     Product.class);
 
             product.setId(invoice.getProductId());
@@ -60,10 +60,10 @@ public class InvoiceService {
         Invoice invoice = invoiceMapper.toInvoice(invoiceDTO);
 
         //update inventory -> adds purchased items to stock
-        Inventory inventory = restTemplate.getForObject("http://localhost:3005/inventory/product/" + invoice.getProductId()
+        Inventory inventory = restTemplate.getForObject("http://inventory-service/inventory/product/" + invoice.getProductId()
                                                         ,Inventory.class);
         inventory.setQuantity(inventory.getQuantity() + invoice.getAmount());
-        restTemplate.put("http://localhost:3005/inventory/inventory/" + inventory.getId(), inventory, Inventory.class);
+        restTemplate.put("http://inventory-service/inventory/inventory/" + inventory.getId(), inventory, Inventory.class);
         Invoice saved = invoiceRepository.save(invoice);
 
         return invoiceMapper.toInvoiceDTO(saved);
