@@ -6,10 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class ResponseTemplateVO {
-    
+@AllArgsConstructor
+public class InventoryRequest {
+
     private InvoiceDTO invoice;
-    private Product product;
+    private Inventory inventory;
 }

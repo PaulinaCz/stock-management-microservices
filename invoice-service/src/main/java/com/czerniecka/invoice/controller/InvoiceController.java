@@ -2,7 +2,8 @@ package com.czerniecka.invoice.controller;
 
 import com.czerniecka.invoice.dto.InvoiceDTO;
 import com.czerniecka.invoice.service.InvoiceService;
-import com.czerniecka.invoice.vo.ResponseTemplateVO;
+import com.czerniecka.invoice.vo.InventoryRequest;
+import com.czerniecka.invoice.vo.InvoiceProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,16 +31,16 @@ public class InvoiceController {
     }
 
     @GetMapping("/{invoiceId}")
-    public ResponseEntity<ResponseTemplateVO> getInvoiceWithProduct(@PathVariable UUID invoiceId){
-        Optional<ResponseTemplateVO> withProduct = invoiceService.getInvoiceWithProduct(invoiceId);
+    public ResponseEntity<InvoiceProductResponse> getInvoiceWithProduct(@PathVariable UUID invoiceId){
+        Optional<InvoiceProductResponse> withProduct = invoiceService.getInvoiceWithProduct(invoiceId);
 
-        return withProduct.map(responseTemplateVO -> new ResponseEntity<>(responseTemplateVO, HttpStatus.OK))
+        return withProduct.map(invoiceProductResponse -> new ResponseEntity<>(invoiceProductResponse, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @PostMapping("")
-    public ResponseEntity<InvoiceDTO> addInvoice(@RequestBody InvoiceDTO invoiceDTO){
-        InvoiceDTO saved = invoiceService.save(invoiceDTO);
+    public ResponseEntity<InvoiceDTO> addInvoice(@RequestBody InventoryRequest inventoryRequest){
+        InvoiceDTO saved = invoiceService.save(inventoryRequest);
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 

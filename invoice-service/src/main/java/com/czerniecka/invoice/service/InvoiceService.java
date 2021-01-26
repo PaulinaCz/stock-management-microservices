@@ -4,8 +4,10 @@ import com.czerniecka.invoice.dto.InvoiceDTO;
 import com.czerniecka.invoice.dto.InvoiceMapper;
 import com.czerniecka.invoice.entity.Invoice;
 import com.czerniecka.invoice.repository.InvoiceRepository;
+import com.czerniecka.invoice.vo.Inventory;
+import com.czerniecka.invoice.vo.InventoryRequest;
 import com.czerniecka.invoice.vo.Product;
-import com.czerniecka.invoice.vo.ResponseTemplateVO;
+import com.czerniecka.invoice.vo.InvoiceProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -34,8 +36,8 @@ public class InvoiceService {
         return invoiceMapper.toInvoiceDTOs(all);
     }
 
-    public Optional<ResponseTemplateVO> getInvoiceWithProduct(UUID invoiceId) {
-        ResponseTemplateVO vo = new ResponseTemplateVO();
+    public Optional<InvoiceProductResponse> getInvoiceWithProduct(UUID invoiceId) {
+        InvoiceProductResponse vo = new InvoiceProductResponse();
         
         Optional<Invoice> i = invoiceRepository.findById(invoiceId);
 
@@ -54,8 +56,16 @@ public class InvoiceService {
         }
     }
 
-    public InvoiceDTO save(InvoiceDTO invoiceDTO) {
-        Invoice invoice = invoiceMapper.toInvoice(invoiceDTO);
-        return invoiceMapper.toInvoiceDTO(invoiceRepository.save(invoice));
+    public InvoiceDTO save(InventoryRequest request) {
+        Invoice invoice = invoiceMapper.toInvoice(request.getInvoice());
+
+        //update inventory -> adds purchased items to stock
+        Inventory inventory = request.getInventory();
+        inventory.setProductId(invoice.getProductId());
+        inventory.setQuantity(invoice.getAmount());
+        restTemplate.postForObject("http://localhost:3005/inventory", inventory, Inventory.class);
+        Invoice saved = invoiceRepository.save(invoice);
+
+        return invoiceMapper.toInvoiceDTO(saved);
     }
 }
