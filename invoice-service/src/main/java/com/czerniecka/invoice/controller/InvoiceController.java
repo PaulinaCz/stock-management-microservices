@@ -2,7 +2,6 @@ package com.czerniecka.invoice.controller;
 
 import com.czerniecka.invoice.dto.InvoiceDTO;
 import com.czerniecka.invoice.service.InvoiceService;
-import com.czerniecka.invoice.vo.InventoryRequest;
 import com.czerniecka.invoice.vo.InvoiceProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -39,8 +38,8 @@ public class InvoiceController {
     }
 
     @PostMapping("")
-    public ResponseEntity<InvoiceDTO> addInvoice(@RequestBody InventoryRequest inventoryRequest){
-        InvoiceDTO saved = invoiceService.save(inventoryRequest);
+    public ResponseEntity<InvoiceDTO> addInvoice(@RequestBody InvoiceDTO invoiceDTO){
+        InvoiceDTO saved = invoiceService.save(invoiceDTO);
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 
