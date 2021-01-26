@@ -64,7 +64,7 @@ public class InvoiceService {
                                                         ,Inventory.class);
         inventory.setLastModified(LocalDateTime.now());
         inventory.setQuantity(inventory.getQuantity() + invoice.getAmount());
-        restTemplate.put("http://localhost:3005/inventory", inventory, Inventory.class);
+        restTemplate.put("http://localhost:3005/inventory/" + inventory.getId(), inventory, Inventory.class);
         Invoice saved = invoiceRepository.save(invoice);
 
         return invoiceMapper.toInvoiceDTO(saved);
