@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -69,27 +68,34 @@ public class InventoryService {
         }
     }
 
+    public List<InventoryDTO> findInventoryByProductId(UUID productId) {
+        List<Inventory> allByProduct = inventoryRepository.findAllByProductId(productId);
+        return inventoryMapper.toInventoryDTOs(allByProduct);
+    }
+
     public InventoryDTO save(InventoryDTO inventoryDTO) {
         Inventory inventory = inventoryMapper.toInventory(inventoryDTO);
         Inventory saved = inventoryRepository.save(inventory);
         return inventoryMapper.toInventoryDTO(saved);
     }
 
-    public boolean updateInventory(UUID inventoryId, InventoryDTO inventoryDTO) {
-        Optional<Inventory> i = inventoryRepository.findById(inventoryId);
 
-        if(i.isPresent()){
-            Inventory inventory = i.get();
-            inventory.setLastModified(LocalDateTime.now());
-            inventory.setProductId(inventoryDTO.getProductId());
-            inventory.setQuantity(inventoryDTO.getQuantity());
-
-            inventoryRepository.save(inventory);
-            return true;
-        }else{
-            return false;
-        }
-    }
+//
+//    public boolean updateInventory(UUID inventoryId, InventoryDTO inventoryDTO) {
+//        Optional<Inventory> i = inventoryRepository.findById(inventoryId);
+//
+//        if(i.isPresent()){
+//            Inventory inventory = i.get();
+//            inventory.setLastModified(LocalDateTime.now());
+//            inventory.setProductId(inventoryDTO.getProductId());
+//            inventory.setQuantity(inventoryDTO.getQuantity());
+//
+//            inventoryRepository.save(inventory);
+//            return true;
+//        }else{
+//            return false;
+//        }
+//    }
 
 
 }

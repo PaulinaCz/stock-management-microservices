@@ -42,21 +42,27 @@ public class InventoryController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    @GetMapping("/product/{productId}")
+    public ResponseEntity<List<InventoryDTO>> getInventoryByProductId(@PathVariable UUID productId){
+        List<InventoryDTO> allByProduct = inventoryService.findInventoryByProductId(productId);
+        return ResponseEntity.ok(allByProduct);
+    }
+
     @PostMapping("")
     public ResponseEntity<InventoryDTO> addInventory(@RequestBody InventoryDTO inventoryDTO){
         InventoryDTO saved = inventoryService.save(inventoryDTO);
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
-
-    @PutMapping("/inventory/{inventoryId}")
-    public ResponseEntity<Void> updateInventory(@PathVariable UUID inventoryId,
-                                @RequestBody InventoryDTO inventoryDTO){
-
-        if(!inventoryService.updateInventory(inventoryId, inventoryDTO)){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }else{
-            return new ResponseEntity<>(HttpStatus.CREATED);
-        }
-    }
+//
+//    @PutMapping("/inventory/{inventoryId}")
+//    public ResponseEntity<Void> updateInventory(@PathVariable UUID inventoryId,
+//                                @RequestBody InventoryDTO inventoryDTO){
+//
+//        if(!inventoryService.updateInventory(inventoryId, inventoryDTO)){
+//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+//        }else{
+//            return new ResponseEntity<>(HttpStatus.CREATED);
+//        }
+//    }
 
 }
