@@ -60,7 +60,7 @@ public class InvoiceService {
         Invoice invoice = invoiceMapper.toInvoice(invoiceDTO);
 
         //update inventory -> adds purchased items to stock
-        Inventory inventory = restTemplate.getForObject("http://localhost:3005/inventory/product" + invoice.getProductId()
+        Inventory inventory = restTemplate.getForObject("http://localhost:3005/inventory/product/" + invoice.getProductId()
                                                         ,Inventory.class);
         inventory.setLastModified(LocalDateTime.now());
         inventory.setQuantity(inventory.getQuantity() + invoice.getAmount());
