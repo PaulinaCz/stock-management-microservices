@@ -41,7 +41,7 @@ public class InventoryService {
         List<ResponseTemplateVO> result = new ArrayList<>();
 
         for(Inventory i : inventories){
-            Product product = restTemplate.getForObject("http://localhost:3001/products/" + i.getProductId(),
+            Product product = restTemplate.getForObject("http://product-service/products/" + i.getProductId(),
                                                         Product.class);
             product.setId(i.getProductId());
             ResponseTemplateVO vo = new ResponseTemplateVO();
