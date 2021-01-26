@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -35,7 +36,7 @@ public class InventoryService {
         return inventoryMapper.toInventoryDTOs(all);
     }
 
-    public List<ResponseTemplateVO> getInventoryWithProducts() {
+    public List<ResponseTemplateVO> findAllWithProducts() {
         List<Inventory> inventories = inventoryRepository.findAll();
         List<ResponseTemplateVO> result = new ArrayList<>();
 
@@ -51,26 +52,26 @@ public class InventoryService {
         return result;
     }
 
-    public Optional<ResponseTemplateVO> findInventoryById(UUID inventoryId) {
-        Optional<Inventory> i = inventoryRepository.findById(inventoryId);
-        ResponseTemplateVO vo = new ResponseTemplateVO();
+//    public Optional<ResponseTemplateVO> findInventoryById(UUID inventoryId) {
+//        Optional<Inventory> i = inventoryRepository.findById(inventoryId);
+//        ResponseTemplateVO vo = new ResponseTemplateVO();
+//
+//        if(i.isPresent()){
+//            Inventory inventory = i.get();
+//            Product product = restTemplate.getForObject("http://localhost:3001/products/" + inventory.getProductId(),
+//                    Product.class);
+//            product.setId(inventory.getProductId());
+//            vo.setInventory(inventoryMapper.toInventoryDTO(inventory));
+//            vo.setProduct(product);
+//            return Optional.of(vo);
+//        }else{
+//            return Optional.empty();
+//        }
+//    }
 
-        if(i.isPresent()){
-            Inventory inventory = i.get();
-            Product product = restTemplate.getForObject("http://localhost:3001/products/" + inventory.getProductId(),
-                    Product.class);
-            product.setId(inventory.getProductId());
-            vo.setInventory(inventoryMapper.toInventoryDTO(inventory));
-            vo.setProduct(product);
-            return Optional.of(vo);
-        }else{
-            return Optional.empty();
-        }
-    }
-
-    public List<InventoryDTO> findInventoryByProductId(UUID productId) {
-        List<Inventory> allByProduct = inventoryRepository.findAllByProductId(productId);
-        return inventoryMapper.toInventoryDTOs(allByProduct);
+    public Optional<InventoryDTO> findInventoryByProductId(UUID productId) {
+        Optional<Inventory> inventory = inventoryRepository.findByProductId(productId);
+        return inventory.map(inventoryMapper::toInventoryDTO);
     }
 
     public InventoryDTO save(InventoryDTO inventoryDTO) {
@@ -79,23 +80,21 @@ public class InventoryService {
         return inventoryMapper.toInventoryDTO(saved);
     }
 
+    public boolean updateInventory(UUID inventoryId, InventoryDTO inventoryDTO) {
+        Optional<Inventory> i = inventoryRepository.findById(inventoryId);
 
-//
-//    public boolean updateInventory(UUID inventoryId, InventoryDTO inventoryDTO) {
-//        Optional<Inventory> i = inventoryRepository.findById(inventoryId);
-//
-//        if(i.isPresent()){
-//            Inventory inventory = i.get();
-//            inventory.setLastModified(LocalDateTime.now());
-//            inventory.setProductId(inventoryDTO.getProductId());
-//            inventory.setQuantity(inventoryDTO.getQuantity());
-//
-//            inventoryRepository.save(inventory);
-//            return true;
-//        }else{
-//            return false;
-//        }
-//    }
+        if(i.isPresent()){
+            Inventory inventory = i.get();
+            inventory.setLastModified(LocalDateTime.now());
+            inventory.setProductId(inventoryDTO.getProductId());
+            inventory.setQuantity(inventoryDTO.getQuantity());
+
+            inventoryRepository.save(inventory);
+            return true;
+        }else{
+            return false;
+        }
+    }
 
 
 }

@@ -30,22 +30,23 @@ public class InventoryController {
     }
 
     @GetMapping("/withProducts")
-    public ResponseEntity<List<ResponseTemplateVO>> getInventoryWithProducts(){
-        List<ResponseTemplateVO> allWithProducts = inventoryService.getInventoryWithProducts();
+    public ResponseEntity<List<ResponseTemplateVO>> getAllWithProducts(){
+        List<ResponseTemplateVO> allWithProducts = inventoryService.findAllWithProducts();
         return ResponseEntity.ok(allWithProducts);
     }
-
-    @GetMapping("/{inventoryId}")
-    public ResponseEntity<ResponseTemplateVO> getInventoryById(@PathVariable UUID inventoryId){
-        Optional<ResponseTemplateVO> inventoryById = inventoryService.findInventoryById(inventoryId);
-        return inventoryById.map(responseTemplateVO -> new ResponseEntity<>(responseTemplateVO, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
+//
+//    @GetMapping("/{inventoryId}")
+//    public ResponseEntity<ResponseTemplateVO> getInventoryById(@PathVariable UUID inventoryId){
+//        Optional<ResponseTemplateVO> inventoryById = inventoryService.findInventoryById(inventoryId);
+//        return inventoryById.map(responseTemplateVO -> new ResponseEntity<>(responseTemplateVO, HttpStatus.OK))
+//                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+//    }
 
     @GetMapping("/product/{productId}")
-    public ResponseEntity<List<InventoryDTO>> getInventoryByProductId(@PathVariable UUID productId){
-        List<InventoryDTO> allByProduct = inventoryService.findInventoryByProductId(productId);
-        return ResponseEntity.ok(allByProduct);
+    public ResponseEntity<InventoryDTO> getInventoryByProductId(@PathVariable UUID productId){
+        Optional<InventoryDTO> i = inventoryService.findInventoryByProductId(productId);
+        return i.map(inventoryDTO -> new ResponseEntity<>(inventoryDTO, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @PostMapping("")
@@ -53,16 +54,16 @@ public class InventoryController {
         InventoryDTO saved = inventoryService.save(inventoryDTO);
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
-//
-//    @PutMapping("/inventory/{inventoryId}")
-//    public ResponseEntity<Void> updateInventory(@PathVariable UUID inventoryId,
-//                                @RequestBody InventoryDTO inventoryDTO){
-//
-//        if(!inventoryService.updateInventory(inventoryId, inventoryDTO)){
-//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-//        }else{
-//            return new ResponseEntity<>(HttpStatus.CREATED);
-//        }
-//    }
+
+    @PutMapping("/inventory/{inventoryId}")
+    public ResponseEntity<Void> updateInventory(@PathVariable UUID inventoryId,
+                                @RequestBody InventoryDTO inventoryDTO){
+
+        if(!inventoryService.updateInventory(inventoryId, inventoryDTO)){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }else{
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        }
+    }
 
 }
