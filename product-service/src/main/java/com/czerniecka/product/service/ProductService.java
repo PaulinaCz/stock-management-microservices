@@ -61,7 +61,7 @@ public class ProductService {
         Optional<Product> product = productRepository.findById(productId);
 
         if (product.isPresent()) {
-            Supplier supplier = restTemplate.getForObject("http://localhost:3003/suppliers/" + product.get().getSupplierId(),
+            Supplier supplier = restTemplate.getForObject("http://supplier-service/suppliers/" + product.get().getSupplierId(),
                     Supplier.class);
             vo.setProduct(productMapper.toProductDTO(product.get()));
             vo.setSupplier(supplier);
@@ -78,7 +78,7 @@ public class ProductService {
         Inventory inventory = request.getInventory();
         inventory.setProductId(product.getId());
         inventory.setQuantity(0);
-        restTemplate.postForObject("http://localhost:3005/inventory", inventory, Inventory.class);
+        restTemplate.postForObject("http://inventory-service/inventory", inventory, Inventory.class);
 
         return productMapper.toProductDTO(saved);
     }
