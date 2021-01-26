@@ -4,6 +4,8 @@ import com.czerniecka.order.dto.OrderDTO;
 import com.czerniecka.order.dto.OrderMapper;
 import com.czerniecka.order.entity.Order;
 import com.czerniecka.order.repository.OrderRepository;
+import com.czerniecka.order.vo.Inventory;
+import com.czerniecka.order.vo.InventoryRequest;
 import com.czerniecka.order.vo.Product;
 import com.czerniecka.order.vo.ResponseTemplateVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,13 +35,6 @@ public class OrderService {
 
         List<Order> all = orderRepository.findAll();
         return orderMapper.toOrdersDTOs(all);
-    }
-
-    public OrderDTO save(OrderDTO orderDTO) {
-
-        Order order = orderMapper.toOrder(orderDTO);
-        Order saved = orderRepository.save(order);
-        return orderMapper.toOrderDTO(saved);
     }
 
     public Optional<ResponseTemplateVO> getOrderWithProduct(UUID orderId) {
@@ -76,6 +71,25 @@ public class OrderService {
             result.add(vo);
         }
         return result;
+    }
+
+    /*
+    * Should there be one inventory for each product?
+    * That would prevent having "minus" amout of products after customer places order.
+    * Or item availability will be decided on sum of inventoriesByProduct?
+    * */
+
+    public OrderDTO save(InventoryRequest request) {
+        Order order = orderMapper.toOrder(request.getOrder());
+        // update inventory -> remove items from stock
+
+        Inventory inventory = request.getInventory();
+        inventory.setProductId(order.getProductId());
+        inventory.setQuantity(- order.getAmount());
+        restTemplate.postForObject("http://localhost:3005/inventory", inventory, Inventory.class);
+        Order saved = orderRepository.save(order);
+
+        return orderMapper.toOrderDTO(saved);
     }
 //
 //    public List<OrderDTO> findAllByCustomerId(UUID customerId) {

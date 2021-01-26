@@ -2,6 +2,7 @@ package com.czerniecka.order.controller;
 
 import com.czerniecka.order.dto.OrderDTO;
 import com.czerniecka.order.service.OrderService;
+import com.czerniecka.order.vo.InventoryRequest;
 import com.czerniecka.order.vo.ResponseTemplateVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -50,8 +51,8 @@ public class OrderController {
 //    }
 
     @PostMapping("")
-    public ResponseEntity<OrderDTO> addOrder(@RequestBody OrderDTO orderDTO){
-        OrderDTO saved = orderService.save(orderDTO);
+    public ResponseEntity<OrderDTO> addOrder(@RequestBody InventoryRequest request){
+        OrderDTO saved = orderService.save(request);
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 }
