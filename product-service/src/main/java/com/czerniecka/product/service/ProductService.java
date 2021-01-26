@@ -4,6 +4,8 @@ import com.czerniecka.product.dto.ProductDTO;
 import com.czerniecka.product.dto.ProductMapper;
 import com.czerniecka.product.entity.Product;
 import com.czerniecka.product.repository.ProductRepository;
+import com.czerniecka.product.vo.Inventory;
+import com.czerniecka.product.vo.InventoryRequest;
 import com.czerniecka.product.vo.ResponseTemplateVO;
 import com.czerniecka.product.vo.Supplier;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,44 +37,18 @@ public class ProductService {
         return productMapper.toProductsDTOs(all);
     }
 
-    public Optional<ProductDTO> findProductById(UUID productId) {
+//    public Optional<ProductDTO> findProductById(UUID productId) {
+//
+//        Optional<Product> byId = productRepository.findById(productId);
+//        return byId.map(productMapper::toProductDTO);
+//
+//    }
 
-        Optional<Product> byId = productRepository.findById(productId);
-        return byId.map(productMapper::toProductDTO);
-
-    }
-
-    public ProductDTO save(ProductDTO productDTO) {
-        Product product = productMapper.toProduct(productDTO);
-        Product saved = productRepository.save(product);
-        return productMapper.toProductDTO(saved);
-    }
 
     public List<ProductDTO> findProductsByCategory(String category) {
 
         List<Product> allByCategory = productRepository.findAllByCategory(category);
         return productMapper.toProductsDTOs(allByCategory);
-    }
-
-    public boolean updateProduct(UUID productId, ProductDTO productDTO) {
-
-        Optional<Product> p = productRepository.findById(productId);
-
-        if(p.isPresent()){
-            Product product = p.get();
-            product.setName(productDTO.getName());
-            product.setBuyingPrice(productDTO.getBuyingPrice());
-            product.setSellingPrice(productDTO.getSellingPrice());
-            product.setSupplierId(productDTO.getSupplierId());
-            product.setLastModified(LocalDateTime.now());
-            product.setCategory(productDTO.getCategory());
-            productRepository.save(product);
-
-            return true;
-        }else{
-            return false;
-        }
-
     }
 
     public List<ProductDTO> findProductsBySupplier(UUID supplierId) {
@@ -85,14 +61,48 @@ public class ProductService {
         ResponseTemplateVO vo = new ResponseTemplateVO();
         Optional<Product> product = productRepository.findById(productId);
 
-        if(product.isPresent()){
+        if (product.isPresent()) {
             Supplier supplier = restTemplate.getForObject("http://localhost:3003/suppliers/" + product.get().getSupplierId(),
                     Supplier.class);
             vo.setProduct(productMapper.toProductDTO(product.get()));
             vo.setSupplier(supplier);
             return Optional.of(vo);
-        }else{
+        } else {
             return Optional.empty();
         }
     }
+
+    public ProductDTO save(InventoryRequest request) {
+        Product product = productMapper.toProduct(request.getProduct());
+
+        Inventory inventory = request.getInventory();
+        inventory.setProductId(product.getId());
+        inventory.setQuantity(0);
+        restTemplate.postForObject("http://localhost:3005/inventory", inventory, Inventory.class);
+        Product saved = productRepository.save(product);
+
+        return productMapper.toProductDTO(saved);
+    }
+
+//    public boolean updateProduct(UUID productId, ProductDTO productDTO) {
+//
+//        Optional<Product> p = productRepository.findById(productId);
+//
+//        if (p.isPresent()) {
+//            Product product = p.get();
+//            product.setName(productDTO.getName());
+//            product.setBuyingPrice(productDTO.getBuyingPrice());
+//            product.setSellingPrice(productDTO.getSellingPrice());
+//            product.setSupplierId(productDTO.getSupplierId());
+//            product.setLastModified(LocalDateTime.now());
+//            product.setCategory(productDTO.getCategory());
+//            productRepository.save(product);
+//
+//            return true;
+//        } else {
+//            return false;
+//        }
+//
+//    }
+
 }

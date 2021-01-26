@@ -2,6 +2,7 @@ package com.czerniecka.product.controller;
 
 import com.czerniecka.product.dto.ProductDTO;
 import com.czerniecka.product.service.ProductService;
+import com.czerniecka.product.vo.InventoryRequest;
 import com.czerniecka.product.vo.ResponseTemplateVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,16 +31,16 @@ public class ProductController {
         return ResponseEntity.ok(products);
 
     }
+//
+//    @GetMapping("/{productId}")
+//    public ResponseEntity<ProductDTO> getProductById(@PathVariable UUID productId) {
+//        Optional<ProductDTO> product = productService.findProductById(productId);
+//
+//        return product.map(productDTO -> new ResponseEntity<>(productDTO, HttpStatus.OK))
+//                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+//    }
 
     @GetMapping("/{productId}")
-    public ResponseEntity<ProductDTO> getProductById(@PathVariable UUID productId) {
-        Optional<ProductDTO> product = productService.findProductById(productId);
-
-        return product.map(productDTO -> new ResponseEntity<>(productDTO, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    @GetMapping("/{productId}/supplier")
     public ResponseEntity getProductWithSupplier(@PathVariable UUID productId) {
         Optional<ResponseTemplateVO> productWithSupplier = productService.getProductWithSupplier(productId);
 
@@ -61,20 +62,20 @@ public class ProductController {
     }
 
     @PostMapping("")
-    public ResponseEntity<ProductDTO> addProduct(@RequestBody ProductDTO productDTO) {
-        ProductDTO saved = productService.save(productDTO);
+    public ResponseEntity<ProductDTO> addProduct(@RequestBody InventoryRequest request) {
+        ProductDTO saved = productService.save(request);
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
-
-    @PutMapping("/product/{productId}")
-    public ResponseEntity<Void> updateProduct(@PathVariable UUID productId
-            , @RequestBody ProductDTO productDTO) {
-
-        if (!productService.updateProduct(productId, productDTO)) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        } else {
-            return new ResponseEntity<>(HttpStatus.CREATED);
-        }
-
-    }
+//
+//    @PutMapping("/product/{productId}")
+//    public ResponseEntity<Void> updateProduct(@PathVariable UUID productId
+//            , @RequestBody ProductDTO productDTO) {
+//
+//        if (!productService.updateProduct(productId, productDTO)) {
+//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+//        } else {
+//            return new ResponseEntity<>(HttpStatus.CREATED);
+//        }
+//
+//    }
 }
