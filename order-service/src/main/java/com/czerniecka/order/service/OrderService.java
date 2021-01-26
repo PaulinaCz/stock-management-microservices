@@ -79,9 +79,8 @@ public class OrderService {
 
         Inventory inventory = restTemplate.getForObject("http://localhost:3005/inventory/product/" + order.getProductId()
                 ,Inventory.class);
-        inventory.setLastModified(LocalDateTime.now());
         inventory.setQuantity(inventory.getQuantity() - order.getAmount());
-        restTemplate.put("http://localhost:3005/inventory/" + inventory.getId(), inventory, Inventory.class);
+        restTemplate.put("http://localhost:3005/inventory/inventory/" + inventory.getId(), inventory, Inventory.class);
         Order saved = orderRepository.save(order);
 
         return orderMapper.toOrderDTO(saved);
