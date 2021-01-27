@@ -76,7 +76,7 @@ public class ProductService {
         Product saved = productRepository.save(product);
 
         Inventory inventory = request.getInventory();
-        inventory.setProductId(product.getId());
+        inventory.setProductId(saved.getId());
         inventory.setQuantity(0);
         restTemplate.postForObject("http://inventory-service/inventory", inventory, Inventory.class);
 
