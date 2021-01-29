@@ -1,5 +1,6 @@
 package com.czerniecka.supplier.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
@@ -8,7 +9,9 @@ import javax.persistence.*;
 import java.util.UUID;
 
 @Entity
-@Data@NoArgsConstructor
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Supplier {
 
     @Id
