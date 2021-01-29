@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -39,6 +40,12 @@ public class ProductServiceTest {
     @Before
     public void setUp() {
         when(productMapper.toProductDTO(any(Product.class))).thenReturn(new ProductDTO());
+    }
+
+
+    @Test
+    public void testMapper(){
+        Assertions.assertNotNull(productMapper);
     }
 
     @Test
