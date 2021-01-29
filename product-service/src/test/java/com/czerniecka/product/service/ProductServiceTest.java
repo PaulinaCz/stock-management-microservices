@@ -1,8 +1,8 @@
 package com.czerniecka.product.service;
 
 import com.czerniecka.product.dto.ProductDTO;
-import com.czerniecka.product.dto.ProductMapper;
 import com.czerniecka.product.entity.Product;
+import com.czerniecka.product.dto.ProductMapper;
 import com.czerniecka.product.repository.ProductRepository;
 import com.czerniecka.product.vo.Inventory;
 import com.czerniecka.product.vo.InventoryRequest;
@@ -40,7 +40,7 @@ public class ProductServiceTest {
     ProductService productService;
 
     @Before
-    public void setUp() {
+    public void init() {
         productService = new ProductService(productRepository, productMapper, restTemplate);
     }
 
