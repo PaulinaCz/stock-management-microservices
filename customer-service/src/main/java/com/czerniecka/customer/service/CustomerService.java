@@ -29,7 +29,7 @@ public class CustomerService {
         return customerMapper.toCustomersDTOs(all);
     }
 
-    public Optional<CustomerDTO> findSupplierById(UUID customerId) {
+    public Optional<CustomerDTO> findCustomerById(UUID customerId) {
 
         Optional<Customer> byId = customerRepository.findById(customerId);
         return byId.map(customerMapper::toCustomerDTO);
