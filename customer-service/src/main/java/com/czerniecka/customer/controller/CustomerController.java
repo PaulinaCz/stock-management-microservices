@@ -30,7 +30,7 @@ public class CustomerController {
 
     @GetMapping("/{customerId}")
     public ResponseEntity getCustomerById(@PathVariable UUID customerId){
-        Optional<CustomerDTO> customer = customerService.findSupplierById(customerId);
+        Optional<CustomerDTO> customer = customerService.findCustomerById(customerId);
 
         return customer.map(customerDTO -> new ResponseEntity(customerDTO, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity(HttpStatus.NOT_FOUND));
