@@ -89,7 +89,7 @@ Optional<ProductDTO> productById = productService.findProductById(UUID.randomUUI
     }
 
     @Test
-    public void shouldReturnSavedObject(){
+    public void shouldReturnSavedProduct(){
 
         Product product = new Product(UUID.randomUUID(), "Product", BigDecimal.ONE, BigDecimal.TEN,
                 "Category", LocalDateTime.now(), LocalDateTime.now(), UUID.randomUUID());
