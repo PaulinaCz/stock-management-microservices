@@ -16,7 +16,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -47,13 +47,15 @@ public class CustomerServiceTest {
     @Test
     public void shouldReturnCustomer(){
 
+
         UUID customerId = UUID.randomUUID();
         Customer customer = new Customer(customerId, "Customer", "customer@gmail.com");
 
-        when(customerRepository.save(new Customer())).thenReturn(customer);
-        Optional<CustomerDTO> customerById = customerService.findCustomerById(customerId);
+        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
+        Optional<CustomerDTO> result = customerService.findCustomerById(customerId);
 
-        assertEquals(Optional.of(customerMapper.toCustomerDTO(customer)), customerById);
+        assertEquals(Optional.of(customerMapper.toCustomerDTO(customer)), result);
+
 
     }
 }
