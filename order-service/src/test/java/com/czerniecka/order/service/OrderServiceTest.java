@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 
@@ -56,10 +57,11 @@ public class OrderServiceTest {
 
 
     @Test
-    public void shouldReturnSavedObject(){
+    public void shouldReturnSavedOrder(){
 
+        UUID customerId = UUID.randomUUID();
         Order order = new Order(UUID.randomUUID(), "cash", "shipped", LocalDateTime.now(),
-                UUID.randomUUID(), 5, UUID.randomUUID());
+                UUID.randomUUID(), 5, customerId);
 
         Inventory inventory = new Inventory();
         inventory.setId(UUID.randomUUID());
@@ -67,14 +69,14 @@ public class OrderServiceTest {
         inventory.setProductId(order.getProductId());
         inventory.setQuantity(15);
 
-        when(orderRepository.save(new Order())).thenReturn(order);
         when(restTemplate.getForObject("http://inventory-service/inventory/product/" + order.getProductId()
                 ,Inventory.class)).thenReturn(inventory);
-
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
         OrderDTO saved = orderService.save(orderMapper.toOrderDTO(order));
 
         assertThat(saved.getAmount()).isEqualTo(5);
         assertThat(saved.getOrderStatus()).isEqualTo("shipped");
+        assertThat(saved.getCustomerId()).isEqualTo(customerId);
 
     }
 
