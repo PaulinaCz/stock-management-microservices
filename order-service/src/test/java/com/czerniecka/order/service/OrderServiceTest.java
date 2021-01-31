@@ -61,18 +61,17 @@ public class OrderServiceTest {
         Order order = new Order(UUID.randomUUID(), "cash", "shipped", LocalDateTime.now(),
                 UUID.randomUUID(), 5, UUID.randomUUID());
 
-        OrderDTO orderDTO = new OrderDTO();
         Inventory inventory = new Inventory();
         inventory.setId(UUID.randomUUID());
         inventory.setLastModified(LocalDateTime.now());
         inventory.setProductId(order.getProductId());
         inventory.setQuantity(15);
 
-        when(orderRepository.save(orderMapper.toOrder(orderDTO))).thenReturn(order);
+        when(orderRepository.save(new Order())).thenReturn(order);
         when(restTemplate.getForObject("http://inventory-service/inventory/product/" + order.getProductId()
                 ,Inventory.class)).thenReturn(inventory);
 
-        OrderDTO saved = orderService.save(orderDTO);
+        OrderDTO saved = orderService.save(orderMapper.toOrderDTO(order));
 
         assertThat(saved.getAmount()).isEqualTo(5);
         assertThat(saved.getOrderStatus()).isEqualTo("shipped");

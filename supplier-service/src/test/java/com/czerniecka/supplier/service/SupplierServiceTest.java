@@ -39,9 +39,8 @@ public  class SupplierServiceTest {
 
         UUID supplierId = UUID.randomUUID();
         Supplier supplier = new Supplier(supplierId, "Supplier", "supplier@gmail.com");
-        SupplierDTO supplierDTO = new SupplierDTO();
 
-        when(supplierRepository.save(supplierMapper.toSupplier(supplierDTO))).thenReturn(supplier);
+        when(supplierRepository.findById(supplierId)).thenReturn(Optional.of(supplier));
         Optional<SupplierDTO> supplierById =
                 supplierService.findSupplierById(supplierId);
 
