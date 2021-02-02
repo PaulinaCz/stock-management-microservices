@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -23,12 +22,14 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private RestTemplate restTemplate;
+    private final ProductServiceClient productServiceClient;
 
     @Autowired
-    public OrderService(OrderRepository orderRepository, OrderMapper orderMapper, RestTemplate restTemplate) {
+    public OrderService(OrderRepository orderRepository, OrderMapper orderMapper, RestTemplate restTemplate, ProductServiceClient productServiceClient) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.restTemplate = restTemplate;
+        this.productServiceClient = productServiceClient;
     }
 
     public List<OrderDTO> findAll() {
@@ -43,13 +44,10 @@ public class OrderService {
 
         if(o.isPresent()){
             Order order = o.get();
-            Product product = restTemplate.getForObject("http://product-service/products/" + order.getProductId(),
-                    Product.class);
-
+            Product product = productServiceClient.getProduct(order.getProductId());
             product.setId(order.getProductId());
             vo.setOrder(orderMapper.toOrderDTO(order));
             vo.setProduct(product);
-
             return Optional.of(vo);
         }else{
             return Optional.empty();
@@ -62,8 +60,7 @@ public class OrderService {
 
         for (Order o : orders
              ) {
-            Product product =  restTemplate.getForObject("http://product-service/products/" + o.getProductId(),
-                    Product.class);
+            Product product =  productServiceClient.getProduct(o.getProductId());
             ResponseTemplateVO vo = new ResponseTemplateVO();
             product.setId(o.getProductId());
             vo.setOrder(orderMapper.toOrderDTO(o));
@@ -85,11 +82,5 @@ public class OrderService {
 
         return orderMapper.toOrderDTO(saved);
     }
-//
-//    public List<OrderDTO> findAllByCustomerId(UUID customerId) {
-//
-//        List<Order> allByCustomerId = orderRepository.findAllByCustomerId(customerId);
-//
-//        return orderMapper.toOrdersDTOs(allByCustomerId);
-//    }
+
 }

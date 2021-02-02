@@ -43,11 +43,6 @@ public class OrderController {
         List<ResponseTemplateVO> orders = orderService.getOrdersWithProductsForCustomer(customerId);
         return ResponseEntity.ok(orders);
     }
-//
-//    @GetMapping("/customer/{customerId}")
-//    public List<OrderDTO> getAllByCustomerId(@PathVariable UUID customerId){
-//        return orderService.findAllByCustomerId(customerId);
-//    }
 
     @PostMapping("")
     public ResponseEntity<OrderDTO> addOrder(@RequestBody OrderDTO orderDTO){
