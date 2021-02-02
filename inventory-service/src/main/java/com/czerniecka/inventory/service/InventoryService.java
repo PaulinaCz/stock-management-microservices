@@ -52,22 +52,22 @@ public class InventoryService {
         return result;
     }
 
-//    public Optional<ResponseTemplateVO> findInventoryById(UUID inventoryId) {
-//        Optional<Inventory> i = inventoryRepository.findById(inventoryId);
-//        ResponseTemplateVO vo = new ResponseTemplateVO();
-//
-//        if(i.isPresent()){
-//            Inventory inventory = i.get();
-//            Product product = restTemplate.getForObject("http://localhost:3001/products/" + inventory.getProductId(),
-//                    Product.class);
-//            product.setId(inventory.getProductId());
-//            vo.setInventory(inventoryMapper.toInventoryDTO(inventory));
-//            vo.setProduct(product);
-//            return Optional.of(vo);
-//        }else{
-//            return Optional.empty();
-//        }
-//    }
+    public Optional<ResponseTemplateVO> findInventoryById(UUID inventoryId) {
+        Optional<Inventory> i = inventoryRepository.findById(inventoryId);
+        ResponseTemplateVO vo = new ResponseTemplateVO();
+
+        if(i.isPresent()){
+            Inventory inventory = i.get();
+            Product product = restTemplate.getForObject("http://product-service/products/" + inventory.getProductId(),
+                    Product.class);
+            product.setId(inventory.getProductId());
+            vo.setInventory(inventoryMapper.toInventoryDTO(inventory));
+            vo.setProduct(product);
+            return Optional.of(vo);
+        }else{
+            return Optional.empty();
+        }
+    }
 
     public Optional<InventoryDTO> findInventoryByProductId(UUID productId) {
         Optional<Inventory> inventory = inventoryRepository.findByProductId(productId);

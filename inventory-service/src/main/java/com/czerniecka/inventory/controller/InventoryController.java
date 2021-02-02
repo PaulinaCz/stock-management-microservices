@@ -34,13 +34,13 @@ public class InventoryController {
         List<ResponseTemplateVO> allWithProducts = inventoryService.findAllWithProducts();
         return ResponseEntity.ok(allWithProducts);
     }
-//
-//    @GetMapping("/{inventoryId}")
-//    public ResponseEntity<ResponseTemplateVO> getInventoryById(@PathVariable UUID inventoryId){
-//        Optional<ResponseTemplateVO> inventoryById = inventoryService.findInventoryById(inventoryId);
-//        return inventoryById.map(responseTemplateVO -> new ResponseEntity<>(responseTemplateVO, HttpStatus.OK))
-//                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-//    }
+
+    @GetMapping("/{inventoryId}")
+    public ResponseEntity<ResponseTemplateVO> getInventoryById(@PathVariable UUID inventoryId){
+        Optional<ResponseTemplateVO> inventoryById = inventoryService.findInventoryById(inventoryId);
+        return inventoryById.map(responseTemplateVO -> new ResponseEntity<>(responseTemplateVO, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
 
     @GetMapping("/product/{productId}")
     public ResponseEntity<InventoryDTO> getInventoryByProductId(@PathVariable UUID productId){
