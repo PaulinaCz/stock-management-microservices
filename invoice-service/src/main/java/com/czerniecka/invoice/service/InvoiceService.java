@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,12 +21,14 @@ public class InvoiceService {
     private final InvoiceRepository invoiceRepository;
     private final InvoiceMapper invoiceMapper;
     private RestTemplate restTemplate;
+    private final ProductServiceClient productServiceClient;
 
     @Autowired
-    public InvoiceService(InvoiceRepository invoiceRepository, InvoiceMapper invoiceMapper, RestTemplate restTemplate) {
+    public InvoiceService(InvoiceRepository invoiceRepository, InvoiceMapper invoiceMapper, RestTemplate restTemplate, ProductServiceClient productServiceClient) {
         this.invoiceRepository = invoiceRepository;
         this.invoiceMapper = invoiceMapper;
         this.restTemplate = restTemplate;
+        this.productServiceClient = productServiceClient;
     }
 
     public List<InvoiceDTO> findAll() {
@@ -43,9 +44,7 @@ public class InvoiceService {
 
         if(i.isPresent()){
             Invoice invoice = i.get();
-            Product product = restTemplate.getForObject("http://product-service/products/" + invoice.getProductId(),
-                    Product.class);
-
+            Product product = productServiceClient.getProduct(invoice.getProductId());
             product.setId(invoice.getProductId());
             vo.setInvoice(invoiceMapper.toInvoiceDTO(invoice));
             vo.setProduct(product);
