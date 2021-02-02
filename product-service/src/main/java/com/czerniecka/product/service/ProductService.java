@@ -10,9 +10,7 @@ import com.czerniecka.product.vo.ResponseTemplateVO;
 import com.czerniecka.product.vo.Supplier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,13 +20,15 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
-    private RestTemplate restTemplate;
+    private final SupplierServiceClient supplierServiceClient;
+    private final InventoryServiceClient inventoryServiceClient;
 
     @Autowired
-    public ProductService(ProductRepository productRepository, ProductMapper productMapper, RestTemplate restTemplate) {
+    public ProductService(ProductRepository productRepository, ProductMapper productMapper, SupplierServiceClient supplierServiceClient, InventoryServiceClient inventoryServiceClient) {
         this.productRepository = productRepository;
         this.productMapper = productMapper;
-        this.restTemplate = restTemplate;
+        this.supplierServiceClient = supplierServiceClient;
+        this.inventoryServiceClient = inventoryServiceClient;
     }
 
     public List<ProductDTO> findAll() {
@@ -61,8 +61,7 @@ public class ProductService {
         Optional<Product> product = productRepository.findById(productId);
 
         if (product.isPresent()) {
-            Supplier supplier = restTemplate.getForObject("http://supplier-service/suppliers/" + product.get().getSupplierId(),
-                    Supplier.class);
+            Supplier supplier = supplierServiceClient.getSupplier(product.get().getSupplierId());
             vo.setProduct(productMapper.toProductDTO(product.get()));
             vo.setSupplier(supplier);
             return Optional.of(vo);
@@ -78,30 +77,9 @@ public class ProductService {
         Inventory inventory = request.getInventory();
         inventory.setProductId(saved.getId());
         inventory.setQuantity(0);
-        restTemplate.postForObject("http://inventory-service/inventory", inventory, Inventory.class);
+        inventoryServiceClient.postInventory(inventory);
 
         return productMapper.toProductDTO(saved);
     }
-
-//    public boolean updateProduct(UUID productId, ProductDTO productDTO) {
-//
-//        Optional<Product> p = productRepository.findById(productId);
-//
-//        if (p.isPresent()) {
-//            Product product = p.get();
-//            product.setName(productDTO.getName());
-//            product.setBuyingPrice(productDTO.getBuyingPrice());
-//            product.setSellingPrice(productDTO.getSellingPrice());
-//            product.setSupplierId(productDTO.getSupplierId());
-//            product.setLastModified(LocalDateTime.now());
-//            product.setCategory(productDTO.getCategory());
-//            productRepository.save(product);
-//
-//            return true;
-//        } else {
-//            return false;
-//        }
-//
-//    }
 
 }

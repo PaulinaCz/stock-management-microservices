@@ -66,16 +66,5 @@ public class ProductController {
         ProductDTO saved = productService.save(request);
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
-//
-//    @PutMapping("/product/{productId}")
-//    public ResponseEntity<Void> updateProduct(@PathVariable UUID productId
-//            , @RequestBody ProductDTO productDTO) {
-//
-//        if (!productService.updateProduct(productId, productDTO)) {
-//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-//        } else {
-//            return new ResponseEntity<>(HttpStatus.CREATED);
-//        }
-//
-//    }
+
 }
