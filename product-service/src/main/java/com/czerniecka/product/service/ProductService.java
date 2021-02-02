@@ -70,6 +70,8 @@ public class ProductService {
         }
     }
 
+    //TODO: POST needs to be TRANSACTIONAL!
+
     public ProductDTO save(InventoryRequest request) {
         Product product = productMapper.toProduct(request.getProduct());
         Product saved = productRepository.save(product);
