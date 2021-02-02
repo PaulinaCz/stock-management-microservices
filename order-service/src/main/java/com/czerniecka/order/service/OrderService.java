@@ -70,6 +70,7 @@ public class OrderService {
         return result;
     }
 
+    // TODO: PUT NEEDS TO BE TRANSACTIONAL
     public OrderDTO save(OrderDTO orderDTO) {
         Order order = orderMapper.toOrder(orderDTO);
         // update inventory -> remove items from stock
