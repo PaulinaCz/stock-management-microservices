@@ -8,7 +8,6 @@ import com.czerniecka.inventory.vo.Product;
 import com.czerniecka.inventory.vo.ResponseTemplateVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -21,13 +20,13 @@ public class InventoryService {
 
     private final InventoryRepository inventoryRepository;
     private final InventoryMapper inventoryMapper;
-    private RestTemplate restTemplate;
+    private final ProductServiceClient productServiceClient;
 
     @Autowired
-    public InventoryService(InventoryRepository inventoryRepository, InventoryMapper inventoryMapper, RestTemplate restTemplate) {
+    public InventoryService(InventoryRepository inventoryRepository, InventoryMapper inventoryMapper, ProductServiceClient productServiceClient) {
         this.inventoryRepository = inventoryRepository;
         this.inventoryMapper = inventoryMapper;
-        this.restTemplate = restTemplate;
+        this.productServiceClient = productServiceClient;
     }
 
     public List<InventoryDTO> findAll() {
@@ -41,8 +40,7 @@ public class InventoryService {
         List<ResponseTemplateVO> result = new ArrayList<>();
 
         for(Inventory i : inventories){
-            Product product = restTemplate.getForObject("http://product-service/products/" + i.getProductId(),
-                                                        Product.class);
+            Product product = productServiceClient.getProduct(i.getProductId());
             product.setId(i.getProductId());
             ResponseTemplateVO vo = new ResponseTemplateVO();
             vo.setInventory(inventoryMapper.toInventoryDTO(i));
@@ -58,8 +56,7 @@ public class InventoryService {
 
         if(i.isPresent()){
             Inventory inventory = i.get();
-            Product product = restTemplate.getForObject("http://product-service/products/" + inventory.getProductId(),
-                    Product.class);
+            Product product = productServiceClient.getProduct(inventory.getProductId());
             product.setId(inventory.getProductId());
             vo.setInventory(inventoryMapper.toInventoryDTO(inventory));
             vo.setProduct(product);
