@@ -22,13 +22,15 @@ public class InvoiceService {
     private final InvoiceMapper invoiceMapper;
     private RestTemplate restTemplate;
     private final ProductServiceClient productServiceClient;
+    private final InventoryServiceClient inventoryServiceClient;
 
     @Autowired
-    public InvoiceService(InvoiceRepository invoiceRepository, InvoiceMapper invoiceMapper, RestTemplate restTemplate, ProductServiceClient productServiceClient) {
+    public InvoiceService(InvoiceRepository invoiceRepository, InvoiceMapper invoiceMapper, RestTemplate restTemplate, ProductServiceClient productServiceClient, InventoryServiceClient inventoryServiceClient) {
         this.invoiceRepository = invoiceRepository;
         this.invoiceMapper = invoiceMapper;
         this.restTemplate = restTemplate;
         this.productServiceClient = productServiceClient;
+        this.inventoryServiceClient = inventoryServiceClient;
     }
 
     public List<InvoiceDTO> findAll() {
@@ -55,17 +57,19 @@ public class InvoiceService {
         }
     }
 
-    //TODO: POST NEEDS TO BE TRANSACTIONAL
-    public InvoiceDTO save(InvoiceDTO invoiceDTO) {
+    public Optional<InvoiceDTO> save(InvoiceDTO invoiceDTO) {
         Invoice invoice = invoiceMapper.toInvoice(invoiceDTO);
 
         //update inventory -> adds purchased items to stock
-        Inventory inventory = restTemplate.getForObject("http://inventory-service/inventory/product/" + invoice.getProductId()
-                                                        ,Inventory.class);
+        Inventory inventory = inventoryServiceClient.getInventory(invoice.getProductId());
         inventory.setQuantity(inventory.getQuantity() + invoice.getAmount());
-        restTemplate.put("http://inventory-service/inventory/inventory/" + inventory.getId(), inventory, Inventory.class);
-        Invoice saved = invoiceRepository.save(invoice);
+        inventoryServiceClient.putInventory(inventory);
+        if(inventory.getId()!=null){
+            Invoice saved = invoiceRepository.save(invoice);
+            return Optional.of(invoiceMapper.toInvoiceDTO(saved));
+        }else{
+            return Optional.empty();
+        }
 
-        return invoiceMapper.toInvoiceDTO(saved);
     }
 }

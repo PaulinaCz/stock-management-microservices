@@ -39,8 +39,9 @@ public class InvoiceController {
 
     @PostMapping("")
     public ResponseEntity<InvoiceDTO> addInvoice(@RequestBody InvoiceDTO invoiceDTO){
-        InvoiceDTO saved = invoiceService.save(invoiceDTO);
-        return new ResponseEntity<>(saved, HttpStatus.CREATED);
+        Optional<InvoiceDTO> saved = invoiceService.save(invoiceDTO);
+        return saved.map(invoice -> new ResponseEntity<>(invoice, HttpStatus.CREATED))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE));
     }
 
 }
