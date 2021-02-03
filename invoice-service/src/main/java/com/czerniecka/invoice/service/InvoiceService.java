@@ -20,15 +20,13 @@ public class InvoiceService {
     
     private final InvoiceRepository invoiceRepository;
     private final InvoiceMapper invoiceMapper;
-    private RestTemplate restTemplate;
     private final ProductServiceClient productServiceClient;
     private final InventoryServiceClient inventoryServiceClient;
 
     @Autowired
-    public InvoiceService(InvoiceRepository invoiceRepository, InvoiceMapper invoiceMapper, RestTemplate restTemplate, ProductServiceClient productServiceClient, InventoryServiceClient inventoryServiceClient) {
+    public InvoiceService(InvoiceRepository invoiceRepository, InvoiceMapper invoiceMapper, ProductServiceClient productServiceClient, InventoryServiceClient inventoryServiceClient) {
         this.invoiceRepository = invoiceRepository;
         this.invoiceMapper = invoiceMapper;
-        this.restTemplate = restTemplate;
         this.productServiceClient = productServiceClient;
         this.inventoryServiceClient = inventoryServiceClient;
     }
