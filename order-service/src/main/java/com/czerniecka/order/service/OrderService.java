@@ -21,15 +21,13 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
-    private RestTemplate restTemplate;
     private final ProductServiceClient productServiceClient;
     private final InventoryServiceClient inventoryServiceClient;
 
     @Autowired
-    public OrderService(OrderRepository orderRepository, OrderMapper orderMapper, RestTemplate restTemplate, ProductServiceClient productServiceClient, InventoryServiceClient inventoryServiceClient) {
+    public OrderService(OrderRepository orderRepository, OrderMapper orderMapper, ProductServiceClient productServiceClient, InventoryServiceClient inventoryServiceClient) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
-        this.restTemplate = restTemplate;
         this.productServiceClient = productServiceClient;
         this.inventoryServiceClient = inventoryServiceClient;
     }
