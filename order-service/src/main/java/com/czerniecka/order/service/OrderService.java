@@ -44,14 +44,14 @@ public class OrderService {
         ResponseTemplateVO vo = new ResponseTemplateVO();
         Optional<Order> o = orderRepository.findById(orderId);
 
-        if(o.isPresent()){
+        if (o.isPresent()) {
             Order order = o.get();
             Product product = productServiceClient.getProduct(order.getProductId());
             product.setId(order.getProductId());
             vo.setOrder(orderMapper.toOrderDTO(order));
             vo.setProduct(product);
             return Optional.of(vo);
-        }else{
+        } else {
             return Optional.empty();
         }
     }
@@ -61,8 +61,8 @@ public class OrderService {
         List<ResponseTemplateVO> result = new ArrayList<>();
 
         for (Order o : orders
-             ) {
-            Product product =  productServiceClient.getProduct(o.getProductId());
+        ) {
+            Product product = productServiceClient.getProduct(o.getProductId());
             ResponseTemplateVO vo = new ResponseTemplateVO();
             product.setId(o.getProductId());
             vo.setOrder(orderMapper.toOrderDTO(o));
@@ -71,22 +71,18 @@ public class OrderService {
         }
         return result;
     }
-    
+
     public Optional<OrderDTO> save(OrderDTO orderDTO) {
-        
+
         Order order = orderMapper.toOrder(orderDTO);
         // update inventory -> remove items from stock
         Inventory inventory = inventoryServiceClient.getInventory(order.getProductId());
-        if(inventory.getId()!=null){
-            inventory.setQuantity(inventory.getQuantity() - order.getAmount());
-            Inventory i = inventoryServiceClient.putInventory(inventory);
-            if(i.getId()!=null){
-                Order saved = orderRepository.save(order);
-                return Optional.of(orderMapper.toOrderDTO(saved));
-            }else{
-                return Optional.empty();
-            }
-        }else{
+        inventory.setQuantity(inventory.getQuantity() - order.getAmount());
+        Inventory i = inventoryServiceClient.putInventory(inventory);
+        if (i.getId() != null) {
+            Order saved = orderRepository.save(order);
+            return Optional.of(orderMapper.toOrderDTO(saved));
+        } else {
             return Optional.empty();
         }
     }
