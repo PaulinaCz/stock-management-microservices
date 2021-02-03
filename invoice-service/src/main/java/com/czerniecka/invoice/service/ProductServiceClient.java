@@ -25,6 +25,7 @@ public class ProductServiceClient {
     }
 
     public Product fallback(UUID productId, Throwable throwable){
+        System.out.println("Service is currently busy. Please try again later.");
         return new Product();
     }
 
