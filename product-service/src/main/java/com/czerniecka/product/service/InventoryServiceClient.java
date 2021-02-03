@@ -24,6 +24,7 @@ public class InventoryServiceClient {
 
     }
     public HttpStatus fallback(Inventory inventory, Throwable throwable){
+        System.out.println("Error while creating product inventory. Product not saved.");
         return HttpStatus.SERVICE_UNAVAILABLE;
     }
 }
