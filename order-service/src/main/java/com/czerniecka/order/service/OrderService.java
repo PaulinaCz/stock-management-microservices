@@ -23,13 +23,15 @@ public class OrderService {
     private final OrderMapper orderMapper;
     private RestTemplate restTemplate;
     private final ProductServiceClient productServiceClient;
+    private final InventoryServiceClient inventoryServiceClient;
 
     @Autowired
-    public OrderService(OrderRepository orderRepository, OrderMapper orderMapper, RestTemplate restTemplate, ProductServiceClient productServiceClient) {
+    public OrderService(OrderRepository orderRepository, OrderMapper orderMapper, RestTemplate restTemplate, ProductServiceClient productServiceClient, InventoryServiceClient inventoryServiceClient) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.restTemplate = restTemplate;
         this.productServiceClient = productServiceClient;
+        this.inventoryServiceClient = inventoryServiceClient;
     }
 
     public List<OrderDTO> findAll() {
@@ -69,19 +71,24 @@ public class OrderService {
         }
         return result;
     }
-
-    // TODO: PUT NEEDS TO BE TRANSACTIONAL
-    public OrderDTO save(OrderDTO orderDTO) {
+    
+    public Optional<OrderDTO> save(OrderDTO orderDTO) {
+        
         Order order = orderMapper.toOrder(orderDTO);
         // update inventory -> remove items from stock
-
-        Inventory inventory = restTemplate.getForObject("http://inventory-service/inventory/product/" + order.getProductId()
-                ,Inventory.class);
-        inventory.setQuantity(inventory.getQuantity() - order.getAmount());
-        restTemplate.put("http://inventory-service/inventory/inventory/" + inventory.getId(), inventory, Inventory.class);
-        Order saved = orderRepository.save(order);
-
-        return orderMapper.toOrderDTO(saved);
+        Inventory inventory = inventoryServiceClient.getInventory(order.getProductId());
+        if(inventory.getId()!=null){
+            inventory.setQuantity(inventory.getQuantity() - order.getAmount());
+            Inventory i = inventoryServiceClient.putInventory(inventory);
+            if(i.getId()!=null){
+                Order saved = orderRepository.save(order);
+                return Optional.of(orderMapper.toOrderDTO(saved));
+            }else{
+                return Optional.empty();
+            }
+        }else{
+            return Optional.empty();
+        }
     }
 
 }

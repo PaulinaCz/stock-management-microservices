@@ -46,7 +46,8 @@ public class OrderController {
 
     @PostMapping("")
     public ResponseEntity<OrderDTO> addOrder(@RequestBody OrderDTO orderDTO){
-        OrderDTO saved = orderService.save(orderDTO);
-        return new ResponseEntity<>(saved, HttpStatus.CREATED);
+        Optional<OrderDTO> saved = orderService.save(orderDTO);
+        return saved.map(order -> new ResponseEntity<>(order, HttpStatus.CREATED))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE));
     }
 }
