@@ -3,6 +3,7 @@ package com.czerniecka.product.service;
 import com.czerniecka.product.vo.Inventory;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -15,14 +16,14 @@ public class InventoryServiceClient {
     public InventoryServiceClient(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
-
-    //TODO : CHANGE!!
+    
     @CircuitBreaker(name="inventory-service", fallbackMethod = "fallback")
-    public Inventory postInventory(Inventory inventory){
-        return restTemplate.postForObject("http://inventory-service/inventory", inventory, Inventory.class);
-    }
+    public HttpStatus postInventory(Inventory inventory){
+        
+        return restTemplate.postForEntity("http://inventory-service/inventory", inventory, Inventory.class).getStatusCode();
 
-    public Inventory fallback(Inventory inventory, Throwable throwable){
-        return new Inventory();
+    }
+    public HttpStatus fallback(Inventory inventory, Throwable throwable){
+        return HttpStatus.SERVICE_UNAVAILABLE;
     }
 }

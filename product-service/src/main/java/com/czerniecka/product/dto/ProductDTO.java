@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @Data
 public class ProductDTO {
-
+    
     private String name;
     private BigDecimal buyingPrice;
     private BigDecimal sellingPrice;

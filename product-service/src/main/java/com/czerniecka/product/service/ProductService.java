@@ -9,6 +9,7 @@ import com.czerniecka.product.vo.InventoryRequest;
 import com.czerniecka.product.vo.ResponseTemplateVO;
 import com.czerniecka.product.vo.Supplier;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -70,18 +71,23 @@ public class ProductService {
         }
     }
 
-    //TODO: POST needs to be TRANSACTIONAL!
+    public Optional<ProductDTO> save(InventoryRequest request) {
 
-    public ProductDTO save(InventoryRequest request) {
         Product product = productMapper.toProduct(request.getProduct());
         Product saved = productRepository.save(product);
 
         Inventory inventory = request.getInventory();
         inventory.setProductId(saved.getId());
         inventory.setQuantity(0);
-        inventoryServiceClient.postInventory(inventory);
+        HttpStatus httpStatus = inventoryServiceClient.postInventory(inventory);
 
-        return productMapper.toProductDTO(saved);
+        if(httpStatus.equals(HttpStatus.SERVICE_UNAVAILABLE)){
+            productRepository.delete(product);
+            return Optional.empty();
+        }else{
+            return Optional.of(productMapper.toProductDTO(saved));
+        }
+
     }
 
 }

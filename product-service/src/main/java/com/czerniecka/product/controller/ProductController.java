@@ -63,8 +63,9 @@ public class ProductController {
 
     @PostMapping("")
     public ResponseEntity<ProductDTO> addProduct(@RequestBody InventoryRequest request) {
-        ProductDTO saved = productService.save(request);
-        return new ResponseEntity<>(saved, HttpStatus.CREATED);
+        Optional<ProductDTO> saved = productService.save(request);
+        return saved.map(product -> new ResponseEntity<>(product, HttpStatus.CREATED))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE));
     }
 
 }
