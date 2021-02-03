@@ -16,6 +16,7 @@ public class InventoryServiceClient {
         this.restTemplate = restTemplate;
     }
 
+    //TODO : CHANGE!!
     @CircuitBreaker(name="inventory-service", fallbackMethod = "fallback")
     public Inventory postInventory(Inventory inventory){
         return restTemplate.postForObject("http://inventory-service/inventory", inventory, Inventory.class);

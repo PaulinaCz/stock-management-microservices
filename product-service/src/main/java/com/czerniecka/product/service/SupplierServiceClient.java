@@ -25,6 +25,7 @@ public class SupplierServiceClient {
     }
 
     public Supplier fallback(UUID supplierId, Throwable throwable){
+        System.out.println("Service is currently busy. Please try again later.");
         return new Supplier();
     }
 
