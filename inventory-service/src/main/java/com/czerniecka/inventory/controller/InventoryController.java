@@ -55,15 +55,23 @@ public class InventoryController {
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 
-    @PatchMapping("/inventory/{inventoryId}")
-    public ResponseEntity<Void> updateInventory(@PathVariable UUID inventoryId,
-                                @RequestBody InventoryDTO inventoryDTO){
+//    @PatchMapping("/inventory/{inventoryId}")
+//    public ResponseEntity<Void> updateInventory(@PathVariable UUID inventoryId,
+//                                @RequestBody InventoryDTO inventoryDTO){
+//
+//        if(!inventoryService.updateInventory(inventoryId, inventoryDTO)){
+//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+//        }else{
+//            return new ResponseEntity<>(HttpStatus.CREATED);
+//        }
+//    }
 
-        if(!inventoryService.updateInventory(inventoryId, inventoryDTO)){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }else{
-            return new ResponseEntity<>(HttpStatus.CREATED);
-        }
+    @PatchMapping("/inventory/{inventoryId}")
+    public ResponseEntity updateInventory(@PathVariable UUID inventoryId,
+                                          @RequestBody InventoryDTO inventoryDTO){
+        Optional<InventoryDTO> updated = inventoryService.updateInventory(inventoryId, inventoryDTO);
+        return updated.map(inventory -> new ResponseEntity(inventory, HttpStatus.CREATED)).
+                orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_MODIFIED));
     }
 
 }

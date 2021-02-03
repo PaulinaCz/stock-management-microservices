@@ -39,7 +39,7 @@ public class InventoryService {
         List<Inventory> inventories = inventoryRepository.findAll();
         List<ResponseTemplateVO> result = new ArrayList<>();
 
-        for(Inventory i : inventories){
+        for (Inventory i : inventories) {
             Product product = productServiceClient.getProduct(i.getProductId());
             product.setId(i.getProductId());
             ResponseTemplateVO vo = new ResponseTemplateVO();
@@ -54,14 +54,14 @@ public class InventoryService {
         Optional<Inventory> i = inventoryRepository.findById(inventoryId);
         ResponseTemplateVO vo = new ResponseTemplateVO();
 
-        if(i.isPresent()){
+        if (i.isPresent()) {
             Inventory inventory = i.get();
             Product product = productServiceClient.getProduct(inventory.getProductId());
             product.setId(inventory.getProductId());
             vo.setInventory(inventoryMapper.toInventoryDTO(inventory));
             vo.setProduct(product);
             return Optional.of(vo);
-        }else{
+        } else {
             return Optional.empty();
         }
     }
@@ -77,21 +77,38 @@ public class InventoryService {
         return inventoryMapper.toInventoryDTO(saved);
     }
 
-    public boolean updateInventory(UUID inventoryId, InventoryDTO inventoryDTO) {
+    public Optional<InventoryDTO> updateInventory(UUID inventoryId, InventoryDTO inventoryDTO) {
+
         Optional<Inventory> i = inventoryRepository.findById(inventoryId);
 
-        if(i.isPresent()){
+        if (i.isPresent()) {
             Inventory inventory = i.get();
             inventory.setLastModified(LocalDateTime.now());
             inventory.setProductId(inventoryDTO.getProductId());
             inventory.setQuantity(inventoryDTO.getQuantity());
 
-            inventoryRepository.save(inventory);
-            return true;
+            Inventory updated = inventoryRepository.save(inventory);
+            return Optional.of(inventoryMapper.toInventoryDTO(updated));
         }else{
-            return false;
+            return Optional.empty();
         }
     }
+
+//    public boolean updateInventory(UUID inventoryId, InventoryDTO inventoryDTO) {
+//        Optional<Inventory> i = inventoryRepository.findById(inventoryId);
+//
+//        if(i.isPresent()){
+//            Inventory inventory = i.get();
+//            inventory.setLastModified(LocalDateTime.now());
+//            inventory.setProductId(inventoryDTO.getProductId());
+//            inventory.setQuantity(inventoryDTO.getQuantity());
+//
+//            inventoryRepository.save(inventory);
+//            return true;
+//        }else{
+//            return false;
+//        }
+//    }
 
 
 }
