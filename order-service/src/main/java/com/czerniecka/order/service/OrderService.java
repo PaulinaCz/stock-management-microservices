@@ -3,6 +3,7 @@ package com.czerniecka.order.service;
 import com.czerniecka.order.dto.OrderDTO;
 import com.czerniecka.order.dto.OrderMapper;
 import com.czerniecka.order.entity.Order;
+import com.czerniecka.order.exception.CustomException;
 import com.czerniecka.order.repository.OrderRepository;
 import com.czerniecka.order.vo.Inventory;
 import com.czerniecka.order.vo.Product;
@@ -75,13 +76,19 @@ public class OrderService {
         Order saved = orderRepository.save(order);
         // update inventory -> remove items from stock
         Inventory inventory = inventoryServiceClient.getInventory(saved.getProductId());
-        inventory.setQuantity(inventory.getQuantity() - saved.getAmount());
-        HttpStatus httpStatus = inventoryServiceClient.putInventory(inventory);
-        if (httpStatus.equals(HttpStatus.CREATED)) {
-            return Optional.of(orderMapper.toOrderDTO(saved));
-        } else {
+        if(inventory.getQuantity() < orderDTO.getAmount()){
             orderRepository.delete(saved);
-            return Optional.empty();
+            throw new CustomException("Order of " + orderDTO.getAmount() + " products not placed. Only "
+                    + inventory.getQuantity() + " products are available" , HttpStatus.CONFLICT);
+        }else {
+            inventory.setQuantity(inventory.getQuantity() - saved.getAmount());
+            HttpStatus httpStatus = inventoryServiceClient.putInventory(inventory);
+            if (httpStatus.equals(HttpStatus.CREATED)) {
+                return Optional.of(orderMapper.toOrderDTO(saved));
+            } else {
+                orderRepository.delete(saved);
+                return Optional.empty();
+            }
         }
     }
 
