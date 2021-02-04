@@ -55,7 +55,7 @@ public class InventoryController {
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 
-    @PutMapping("/inventory/{inventoryId}")
+    @PutMapping("/{inventoryId}")
     public ResponseEntity<Void> updateInventory(@PathVariable UUID inventoryId,
                                 @RequestBody InventoryDTO inventoryDTO){
 
