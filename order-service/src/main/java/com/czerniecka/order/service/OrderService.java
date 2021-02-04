@@ -8,8 +8,8 @@ import com.czerniecka.order.vo.Inventory;
 import com.czerniecka.order.vo.Product;
 import com.czerniecka.order.vo.ResponseTemplateVO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,16 +71,16 @@ public class OrderService {
     }
 
     public Optional<OrderDTO> save(OrderDTO orderDTO) {
-
         Order order = orderMapper.toOrder(orderDTO);
+        Order saved = orderRepository.save(order);
         // update inventory -> remove items from stock
-        Inventory inventory = inventoryServiceClient.getInventory(order.getProductId());
-        inventory.setQuantity(inventory.getQuantity() - order.getAmount());
-        Inventory i = inventoryServiceClient.putInventory(inventory);
-        if (i.getId() != null) {
-            Order saved = orderRepository.save(order);
+        Inventory inventory = inventoryServiceClient.getInventory(saved.getProductId());
+        inventory.setQuantity(inventory.getQuantity() - saved.getAmount());
+        HttpStatus httpStatus = inventoryServiceClient.putInventory(inventory);
+        if (httpStatus.equals(HttpStatus.CREATED)) {
             return Optional.of(orderMapper.toOrderDTO(saved));
         } else {
+            orderRepository.delete(saved);
             return Optional.empty();
         }
     }

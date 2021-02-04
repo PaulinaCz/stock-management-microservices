@@ -3,6 +3,9 @@ package com.czerniecka.order.service;
 import com.czerniecka.order.vo.Inventory;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -32,12 +35,14 @@ public class InventoryServiceClient {
     // Put/Patch method not working !
 
     @CircuitBreaker(name = "inventory-service", fallbackMethod = "fallbackPut")
-    public Inventory putInventory(Inventory inventory){
-        return restTemplate.patchForObject("http://inventory-service/inventory/inventory/" + inventory.getId(), inventory, Inventory.class);
+    public HttpStatus putInventory(Inventory inventory){
+        HttpEntity request = new HttpEntity(inventory);
+        return restTemplate.exchange("http://inventory-service/inventory/inventory/" + inventory.getId()
+                , HttpMethod.PUT, request, Void.class).getStatusCode();
     }
 
-    public Inventory fallbackPut(Inventory inventory, Throwable throwable){
-        System.out.println("Service not available! Order is not proceed!");
-        return new Inventory();
+    public HttpStatus fallbackPut(Inventory inventory, Throwable throwable){
+        System.out.println("Error while proceeding order, please try again later.");
+        return HttpStatus.SERVICE_UNAVAILABLE;
     }
 }
