@@ -29,7 +29,7 @@ public class InventoryController {
         return ResponseEntity.ok(all);
     }
 
-    @GetMapping("/withProducts")
+    @GetMapping("/products")
     public ResponseEntity<List<ResponseTemplateVO>> getAllWithProducts(){
         List<ResponseTemplateVO> allWithProducts = inventoryService.findAllWithProducts();
         return ResponseEntity.ok(allWithProducts);
