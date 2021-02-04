@@ -42,7 +42,7 @@ public class CustomerController {
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 
-    @PutMapping("/customer/{customerId}")
+    @PutMapping("/{customerId}")
     public ResponseEntity<Void> updateCustomer(@PathVariable UUID customerId,
                                @RequestBody CustomerDTO customerDTO){
 
