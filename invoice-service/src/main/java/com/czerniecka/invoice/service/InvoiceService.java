@@ -8,8 +8,8 @@ import com.czerniecka.invoice.vo.Inventory;
 import com.czerniecka.invoice.vo.Product;
 import com.czerniecka.invoice.vo.InvoiceProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,7 +17,7 @@ import java.util.UUID;
 
 @Service
 public class InvoiceService {
-    
+
     private final InvoiceRepository invoiceRepository;
     private final InvoiceMapper invoiceMapper;
     private final ProductServiceClient productServiceClient;
@@ -31,6 +31,7 @@ public class InvoiceService {
         this.inventoryServiceClient = inventoryServiceClient;
     }
 
+
     public List<InvoiceDTO> findAll() {
 
         List<Invoice> all = invoiceRepository.findAll();
@@ -39,10 +40,10 @@ public class InvoiceService {
 
     public Optional<InvoiceProductResponse> getInvoiceWithProduct(UUID invoiceId) {
         InvoiceProductResponse vo = new InvoiceProductResponse();
-        
+
         Optional<Invoice> i = invoiceRepository.findById(invoiceId);
 
-        if(i.isPresent()){
+        if (i.isPresent()) {
             Invoice invoice = i.get();
             Product product = productServiceClient.getProduct(invoice.getProductId());
             product.setId(invoice.getProductId());
@@ -50,24 +51,23 @@ public class InvoiceService {
             vo.setProduct(product);
 
             return Optional.of(vo);
-        }else{
+        } else {
             return Optional.empty();
         }
     }
 
     public Optional<InvoiceDTO> save(InvoiceDTO invoiceDTO) {
         Invoice invoice = invoiceMapper.toInvoice(invoiceDTO);
-
+        Invoice saved = invoiceRepository.save(invoice);
         //update inventory -> adds purchased items to stock
-        Inventory inventory = inventoryServiceClient.getInventory(invoice.getProductId());
+        Inventory inventory = inventoryServiceClient.getInventory(saved.getProductId());
         inventory.setQuantity(inventory.getQuantity() + invoice.getAmount());
-        inventoryServiceClient.putInventory(inventory);
-        if(inventory.getId()!=null){
-            Invoice saved = invoiceRepository.save(invoice);
+        HttpStatus httpStatus = inventoryServiceClient.putInventory(inventory);
+        if (httpStatus.equals(HttpStatus.CREATED)) {
             return Optional.of(invoiceMapper.toInvoiceDTO(saved));
-        }else{
+        } else {
+            invoiceRepository.delete(saved);
             return Optional.empty();
         }
-
     }
 }
