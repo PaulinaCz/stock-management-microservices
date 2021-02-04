@@ -77,38 +77,21 @@ public class InventoryService {
         return inventoryMapper.toInventoryDTO(saved);
     }
 
-    public Optional<InventoryDTO> updateInventory(UUID inventoryId, InventoryDTO inventoryDTO) {
-
+    public boolean updateInventory(UUID inventoryId, InventoryDTO inventoryDTO) {
         Optional<Inventory> i = inventoryRepository.findById(inventoryId);
 
-        if (i.isPresent()) {
+        if(i.isPresent()){
             Inventory inventory = i.get();
             inventory.setLastModified(LocalDateTime.now());
             inventory.setProductId(inventoryDTO.getProductId());
             inventory.setQuantity(inventoryDTO.getQuantity());
 
-            Inventory updated = inventoryRepository.save(inventory);
-            return Optional.of(inventoryMapper.toInventoryDTO(updated));
+            inventoryRepository.save(inventory);
+            return true;
         }else{
-            return Optional.empty();
+            return false;
         }
     }
-
-//    public boolean updateInventory(UUID inventoryId, InventoryDTO inventoryDTO) {
-//        Optional<Inventory> i = inventoryRepository.findById(inventoryId);
-//
-//        if(i.isPresent()){
-//            Inventory inventory = i.get();
-//            inventory.setLastModified(LocalDateTime.now());
-//            inventory.setProductId(inventoryDTO.getProductId());
-//            inventory.setQuantity(inventoryDTO.getQuantity());
-//
-//            inventoryRepository.save(inventory);
-//            return true;
-//        }else{
-//            return false;
-//        }
-//    }
 
 
 }
