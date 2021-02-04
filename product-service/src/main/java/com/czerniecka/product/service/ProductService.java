@@ -5,7 +5,6 @@ import com.czerniecka.product.dto.ProductMapper;
 import com.czerniecka.product.entity.Product;
 import com.czerniecka.product.repository.ProductRepository;
 import com.czerniecka.product.vo.Inventory;
-import com.czerniecka.product.vo.InventoryRequest;
 import com.czerniecka.product.vo.ResponseTemplateVO;
 import com.czerniecka.product.vo.Supplier;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,12 +70,12 @@ public class ProductService {
         }
     }
 
-    public Optional<ProductDTO> save(InventoryRequest request) {
+    public Optional<ProductDTO> save(ProductDTO productDTO) {
 
-        Product product = productMapper.toProduct(request.getProduct());
+        Product product = productMapper.toProduct(productDTO);
         Product saved = productRepository.save(product);
 
-        Inventory inventory = request.getInventory();
+        Inventory inventory = new Inventory();
         inventory.setProductId(saved.getId());
         inventory.setQuantity(0);
         HttpStatus httpStatus = inventoryServiceClient.postInventory(inventory);

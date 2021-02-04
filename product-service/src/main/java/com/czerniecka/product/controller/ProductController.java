@@ -2,7 +2,6 @@ package com.czerniecka.product.controller;
 
 import com.czerniecka.product.dto.ProductDTO;
 import com.czerniecka.product.service.ProductService;
-import com.czerniecka.product.vo.InventoryRequest;
 import com.czerniecka.product.vo.ResponseTemplateVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -62,8 +61,8 @@ public class ProductController {
     }
 
     @PostMapping("")
-    public ResponseEntity<ProductDTO> addProduct(@RequestBody InventoryRequest request) {
-        Optional<ProductDTO> saved = productService.save(request);
+    public ResponseEntity<ProductDTO> addProduct(@RequestBody ProductDTO productDTO) {
+        Optional<ProductDTO> saved = productService.save(productDTO);
         return saved.map(product -> new ResponseEntity<>(product, HttpStatus.CREATED))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE));
     }
