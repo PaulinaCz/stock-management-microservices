@@ -42,7 +42,7 @@ public class SupplierController {
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 
-    @PutMapping("/supplier/{supplierId}")
+    @PutMapping("/{supplierId}")
     public ResponseEntity<Void> updateSupplier(@PathVariable UUID supplierId,
                                @RequestBody SupplierDTO supplierDTO){
 
