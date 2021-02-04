@@ -37,7 +37,7 @@ public class InventoryServiceClient {
     public HttpStatus putInventory(Inventory inventory){
 
         HttpEntity request = new HttpEntity(inventory);
-        return restTemplate.exchange("http://inventory-service/inventory/inventory/" + inventory.getId(),
+        return restTemplate.exchange("http://inventory-service/inventory/" + inventory.getId(),
                 HttpMethod.PUT, request, Void.class ).getStatusCode();
     }
 
