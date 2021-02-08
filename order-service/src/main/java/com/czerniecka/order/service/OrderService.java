@@ -81,23 +81,23 @@ public class OrderService {
         /*If inventory-service is not available, service client will invoke fallback method and
         will stop executing rest of POST order*/
         Inventory inventory = inventoryServiceClient.getInventory(saved.getProductId());
-        /* When trying to order more items then in stock - throw error*/
-        if(inventory.getQuantity() < orderDTO.getAmount()){
-            orderRepository.delete(saved);
-            throw new CustomException("Order of " + orderDTO.getAmount() + " products not placed. Only "
-                    + inventory.getQuantity() + " products are available" , HttpStatus.BAD_REQUEST);
-        }
-        /* When enough product in stock - update inventory -> remove items from stock */
-        else {
+        /* When enough items in stock - process order. If not - throw exception */
+        if (inventory.getQuantity() > orderDTO.getAmount()) {
             inventory.setQuantity(inventory.getQuantity() - saved.getAmount());
             HttpStatus httpStatus = inventoryServiceClient.putInventory(inventory);
+
             if (httpStatus.equals(HttpStatus.CREATED)) {
                 return Optional.of(orderMapper.toOrderDTO(saved));
             } else {
                 orderRepository.delete(saved);
                 return Optional.empty();
             }
+        } else {
+            orderRepository.delete(saved);
+            throw new CustomException("Sorry. Unable to checkout - not enough items in stock.", HttpStatus.BAD_REQUEST);
         }
-    }
 
+    }
 }
+
+
