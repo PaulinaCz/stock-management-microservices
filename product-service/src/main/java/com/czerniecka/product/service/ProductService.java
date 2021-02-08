@@ -1,5 +1,7 @@
 package com.czerniecka.product.service;
 
+import com.czerniecka.product.client.InventoryServiceClient;
+import com.czerniecka.product.client.SupplierServiceClient;
 import com.czerniecka.product.dto.ProductDTO;
 import com.czerniecka.product.dto.ProductMapper;
 import com.czerniecka.product.entity.Product;
