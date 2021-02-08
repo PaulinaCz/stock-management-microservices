@@ -7,7 +7,7 @@ import com.czerniecka.order.exception.CustomException;
 import com.czerniecka.order.repository.OrderRepository;
 import com.czerniecka.order.vo.Inventory;
 import com.czerniecka.order.vo.Product;
-import com.czerniecka.order.vo.ResponseTemplateVO;
+import com.czerniecka.order.vo.OrderWithProductResponseVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -39,8 +39,8 @@ public class OrderService {
         return orderMapper.toOrdersDTOs(all);
     }
 
-    public Optional<ResponseTemplateVO> getOrderWithProduct(UUID orderId) {
-        ResponseTemplateVO vo = new ResponseTemplateVO();
+    public Optional<OrderWithProductResponseVO> getOrderWithProduct(UUID orderId) {
+        OrderWithProductResponseVO vo = new OrderWithProductResponseVO();
         Optional<Order> o = orderRepository.findById(orderId);
 
         if (o.isPresent()) {
@@ -55,14 +55,13 @@ public class OrderService {
         }
     }
 
-    public List<ResponseTemplateVO> getOrdersWithProductsForCustomer(UUID customerId) {
+    public List<OrderWithProductResponseVO> getOrdersWithProductsForCustomer(UUID customerId) {
         List<Order> orders = orderRepository.findAllByCustomerId(customerId);
-        List<ResponseTemplateVO> result = new ArrayList<>();
+        List<OrderWithProductResponseVO> result = new ArrayList<>();
 
-        for (Order o : orders
-        ) {
+        for (Order o : orders) {
             Product product = productServiceClient.getProduct(o.getProductId());
-            ResponseTemplateVO vo = new ResponseTemplateVO();
+            OrderWithProductResponseVO vo = new OrderWithProductResponseVO();
             product.setId(o.getProductId());
             vo.setOrder(orderMapper.toOrderDTO(o));
             vo.setProduct(product);
@@ -74,13 +73,18 @@ public class OrderService {
     public Optional<OrderDTO> save(OrderDTO orderDTO) {
         Order order = orderMapper.toOrder(orderDTO);
         Order saved = orderRepository.save(order);
-        // update inventory -> remove items from stock
+
+        /*If inventory-service is not available, service client will invoke fallback method and
+        will stop executing rest of POST order*/
         Inventory inventory = inventoryServiceClient.getInventory(saved.getProductId());
+        /* When trying to order more items then in stock - throw error*/
         if(inventory.getQuantity() < orderDTO.getAmount()){
             orderRepository.delete(saved);
             throw new CustomException("Order of " + orderDTO.getAmount() + " products not placed. Only "
-                    + inventory.getQuantity() + " products are available" , HttpStatus.CONFLICT);
-        }else {
+                    + inventory.getQuantity() + " products are available" , HttpStatus.BAD_REQUEST);
+        }
+        /* When enough product in stock - update inventory -> remove items from stock */
+        else {
             inventory.setQuantity(inventory.getQuantity() - saved.getAmount());
             HttpStatus httpStatus = inventoryServiceClient.putInventory(inventory);
             if (httpStatus.equals(HttpStatus.CREATED)) {
