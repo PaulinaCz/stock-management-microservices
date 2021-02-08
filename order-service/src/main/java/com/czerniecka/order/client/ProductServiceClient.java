@@ -1,4 +1,4 @@
-package com.czerniecka.order.service;
+package com.czerniecka.order.client;
 
 import com.czerniecka.order.vo.Product;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;

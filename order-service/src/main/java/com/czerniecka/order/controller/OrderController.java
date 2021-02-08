@@ -2,7 +2,7 @@ package com.czerniecka.order.controller;
 
 import com.czerniecka.order.dto.OrderDTO;
 import com.czerniecka.order.service.OrderService;
-import com.czerniecka.order.vo.OrderWithProductResponseVO;
+import com.czerniecka.order.vo.OrderWithProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,16 +31,17 @@ public class OrderController {
     }
 
     @GetMapping("/{orderId}")
-    public ResponseEntity<OrderWithProductResponseVO> getOrderWithProduct(@PathVariable UUID orderId){
-        Optional<OrderWithProductResponseVO> orderWithProduct = orderService.getOrderWithProduct(orderId);
+    public ResponseEntity<OrderWithProductResponse> getOrderWithProduct(@PathVariable UUID orderId){
+        Optional<OrderWithProductResponse> orderWithProduct = orderService.getOrderWithProduct(orderId);
 
-        return orderWithProduct.map(orderWithProductResponseVO -> new ResponseEntity<>(orderWithProductResponseVO, HttpStatus.OK))
+        return orderWithProduct
+                .map(orderWithProductResponse -> new ResponseEntity<>(orderWithProductResponse, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<OrderWithProductResponseVO>> getOrdersWithProductsForCustomer(@PathVariable UUID customerId){
-        List<OrderWithProductResponseVO> orders = orderService.getOrdersWithProductsForCustomer(customerId);
+    public ResponseEntity<List<OrderWithProductResponse>> getOrdersWithProductsForCustomer(@PathVariable UUID customerId){
+        List<OrderWithProductResponse> orders = orderService.getOrdersWithProductsForCustomer(customerId);
         return ResponseEntity.ok(orders);
     }
 

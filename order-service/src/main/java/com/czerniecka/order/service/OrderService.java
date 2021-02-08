@@ -1,5 +1,7 @@
 package com.czerniecka.order.service;
 
+import com.czerniecka.order.client.InventoryServiceClient;
+import com.czerniecka.order.client.ProductServiceClient;
 import com.czerniecka.order.dto.OrderDTO;
 import com.czerniecka.order.dto.OrderMapper;
 import com.czerniecka.order.entity.Order;
@@ -7,7 +9,7 @@ import com.czerniecka.order.exception.CustomException;
 import com.czerniecka.order.repository.OrderRepository;
 import com.czerniecka.order.vo.Inventory;
 import com.czerniecka.order.vo.Product;
-import com.czerniecka.order.vo.OrderWithProductResponseVO;
+import com.czerniecka.order.vo.OrderWithProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -39,33 +41,35 @@ public class OrderService {
         return orderMapper.toOrdersDTOs(all);
     }
 
-    public Optional<OrderWithProductResponseVO> getOrderWithProduct(UUID orderId) {
-        OrderWithProductResponseVO vo = new OrderWithProductResponseVO();
+    /* If product-service is unavailable, returns Order with empty Product object*/
+    public Optional<OrderWithProductResponse> getOrderWithProduct(UUID orderId) {
+        OrderWithProductResponse response = new OrderWithProductResponse();
         Optional<Order> o = orderRepository.findById(orderId);
 
         if (o.isPresent()) {
             Order order = o.get();
             Product product = productServiceClient.getProduct(order.getProductId());
             product.setId(order.getProductId());
-            vo.setOrder(orderMapper.toOrderDTO(order));
-            vo.setProduct(product);
-            return Optional.of(vo);
+            response.setOrder(orderMapper.toOrderDTO(order));
+            response.setProduct(product);
+            return Optional.of(response);
         } else {
             return Optional.empty();
         }
     }
 
-    public List<OrderWithProductResponseVO> getOrdersWithProductsForCustomer(UUID customerId) {
+    /* If product-service is unavailable, returns List of Orders with empty Product objects */
+    public List<OrderWithProductResponse> getOrdersWithProductsForCustomer(UUID customerId) {
         List<Order> orders = orderRepository.findAllByCustomerId(customerId);
-        List<OrderWithProductResponseVO> result = new ArrayList<>();
+        List<OrderWithProductResponse> result = new ArrayList<>();
 
         for (Order o : orders) {
             Product product = productServiceClient.getProduct(o.getProductId());
-            OrderWithProductResponseVO vo = new OrderWithProductResponseVO();
+            OrderWithProductResponse response = new OrderWithProductResponse();
             product.setId(o.getProductId());
-            vo.setOrder(orderMapper.toOrderDTO(o));
-            vo.setProduct(product);
-            result.add(vo);
+            response.setOrder(orderMapper.toOrderDTO(o));
+            response.setProduct(product);
+            result.add(response);
         }
         return result;
     }
