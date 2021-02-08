@@ -2,7 +2,7 @@ package com.czerniecka.inventory.controller;
 
 import com.czerniecka.inventory.dto.InventoryDTO;
 import com.czerniecka.inventory.service.InventoryService;
-import com.czerniecka.inventory.vo.ResponseTemplateVO;
+import com.czerniecka.inventory.vo.InventoryProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,15 +30,15 @@ public class InventoryController {
     }
 
     @GetMapping("/products")
-    public ResponseEntity<List<ResponseTemplateVO>> getAllWithProducts(){
-        List<ResponseTemplateVO> allWithProducts = inventoryService.findAllWithProducts();
+    public ResponseEntity<List<InventoryProductResponse>> getAllWithProducts(){
+        List<InventoryProductResponse> allWithProducts = inventoryService.findAllWithProducts();
         return ResponseEntity.ok(allWithProducts);
     }
 
     @GetMapping("/{inventoryId}")
-    public ResponseEntity<ResponseTemplateVO> getInventoryById(@PathVariable UUID inventoryId){
-        Optional<ResponseTemplateVO> inventoryById = inventoryService.findInventoryById(inventoryId);
-        return inventoryById.map(responseTemplateVO -> new ResponseEntity<>(responseTemplateVO, HttpStatus.OK))
+    public ResponseEntity<InventoryProductResponse> getInventoryById(@PathVariable UUID inventoryId){
+        Optional<InventoryProductResponse> inventoryById = inventoryService.findInventoryById(inventoryId);
+        return inventoryById.map(inventoryProductResponse -> new ResponseEntity<>(inventoryProductResponse, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
