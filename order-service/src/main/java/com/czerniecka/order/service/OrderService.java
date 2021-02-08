@@ -9,7 +9,7 @@ import com.czerniecka.order.exception.CustomException;
 import com.czerniecka.order.repository.OrderRepository;
 import com.czerniecka.order.vo.Inventory;
 import com.czerniecka.order.vo.Product;
-import com.czerniecka.order.vo.OrderWithProductResponse;
+import com.czerniecka.order.vo.OrderProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -42,8 +42,8 @@ public class OrderService {
     }
 
     /* If product-service is unavailable, returns Order with empty Product object*/
-    public Optional<OrderWithProductResponse> getOrderWithProduct(UUID orderId) {
-        OrderWithProductResponse response = new OrderWithProductResponse();
+    public Optional<OrderProductResponse> getOrderWithProduct(UUID orderId) {
+        OrderProductResponse response = new OrderProductResponse();
         Optional<Order> o = orderRepository.findById(orderId);
 
         if (o.isPresent()) {
@@ -59,13 +59,13 @@ public class OrderService {
     }
 
     /* If product-service is unavailable, returns List of Orders with empty Product objects */
-    public List<OrderWithProductResponse> getOrdersWithProductsForCustomer(UUID customerId) {
+    public List<OrderProductResponse> getOrdersWithProductsForCustomer(UUID customerId) {
         List<Order> orders = orderRepository.findAllByCustomerId(customerId);
-        List<OrderWithProductResponse> result = new ArrayList<>();
+        List<OrderProductResponse> result = new ArrayList<>();
 
         for (Order o : orders) {
             Product product = productServiceClient.getProduct(o.getProductId());
-            OrderWithProductResponse response = new OrderWithProductResponse();
+            OrderProductResponse response = new OrderProductResponse();
             product.setId(o.getProductId());
             response.setOrder(orderMapper.toOrderDTO(o));
             response.setProduct(product);
