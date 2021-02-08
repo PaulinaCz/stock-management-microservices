@@ -41,7 +41,8 @@ public class InvoiceController {
     public ResponseEntity<InvoiceDTO> addInvoice(@RequestBody InvoiceDTO invoiceDTO){
         Optional<InvoiceDTO> saved = invoiceService.save(invoiceDTO);
         return saved.map(invoice -> new ResponseEntity<>(invoice, HttpStatus.CREATED))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE));
+                .orElseGet(() -> new ResponseEntity("Error while processing invoice, please try again later.",
+                        HttpStatus.SERVICE_UNAVAILABLE));
     }
 
 }

@@ -1,4 +1,4 @@
-package com.czerniecka.invoice.service;
+package com.czerniecka.invoice.client;
 
 import com.czerniecka.invoice.vo.Inventory;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -30,6 +30,7 @@ public class InventoryServiceClient {
 
     public Inventory fallbackGet(UUID productId, Throwable throwable){
         System.out.println("Service is currently busy. Please try again later.");
+        
         return new Inventory();
     }
 

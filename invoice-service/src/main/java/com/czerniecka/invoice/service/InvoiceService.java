@@ -1,5 +1,7 @@
 package com.czerniecka.invoice.service;
 
+import com.czerniecka.invoice.client.InventoryServiceClient;
+import com.czerniecka.invoice.client.ProductServiceClient;
 import com.czerniecka.invoice.dto.InvoiceDTO;
 import com.czerniecka.invoice.dto.InvoiceMapper;
 import com.czerniecka.invoice.entity.Invoice;
@@ -24,7 +26,8 @@ public class InvoiceService {
     private final InventoryServiceClient inventoryServiceClient;
 
     @Autowired
-    public InvoiceService(InvoiceRepository invoiceRepository, InvoiceMapper invoiceMapper, ProductServiceClient productServiceClient, InventoryServiceClient inventoryServiceClient) {
+    public InvoiceService(InvoiceRepository invoiceRepository, InvoiceMapper invoiceMapper,
+                          ProductServiceClient productServiceClient, InventoryServiceClient inventoryServiceClient) {
         this.invoiceRepository = invoiceRepository;
         this.invoiceMapper = invoiceMapper;
         this.productServiceClient = productServiceClient;
@@ -37,9 +40,10 @@ public class InvoiceService {
         List<Invoice> all = invoiceRepository.findAll();
         return invoiceMapper.toInvoiceDTOs(all);
     }
-
+    
+    /* If product-service is unavailable, returns Invoice with empty Product object*/    
     public Optional<InvoiceProductResponse> getInvoiceWithProduct(UUID invoiceId) {
-        InvoiceProductResponse vo = new InvoiceProductResponse();
+        InvoiceProductResponse response = new InvoiceProductResponse();
 
         Optional<Invoice> i = invoiceRepository.findById(invoiceId);
 
@@ -47,10 +51,10 @@ public class InvoiceService {
             Invoice invoice = i.get();
             Product product = productServiceClient.getProduct(invoice.getProductId());
             product.setId(invoice.getProductId());
-            vo.setInvoice(invoiceMapper.toInvoiceDTO(invoice));
-            vo.setProduct(product);
+            response.setInvoice(invoiceMapper.toInvoiceDTO(invoice));
+            response.setProduct(product);
 
-            return Optional.of(vo);
+            return Optional.of(response);
         } else {
             return Optional.empty();
         }
@@ -59,8 +63,11 @@ public class InvoiceService {
     public Optional<InvoiceDTO> save(InvoiceDTO invoiceDTO) {
         Invoice invoice = invoiceMapper.toInvoice(invoiceDTO);
         Invoice saved = invoiceRepository.save(invoice);
-        //update inventory -> adds purchased items to stock
+         /*If inventory-service is not available, service client will invoke fallback method and
+        will stop executing rest of POST order*/
         Inventory inventory = inventoryServiceClient.getInventory(saved.getProductId());
+        
+        /* Update inventory -> adds purchased items to stock */
         inventory.setQuantity(inventory.getQuantity() + invoice.getAmount());
         HttpStatus httpStatus = inventoryServiceClient.putInventory(inventory);
         if (httpStatus.equals(HttpStatus.CREATED)) {

@@ -1,4 +1,4 @@
-package com.czerniecka.invoice.service;
+package com.czerniecka.invoice.client;
 
 import com.czerniecka.invoice.vo.Product;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
