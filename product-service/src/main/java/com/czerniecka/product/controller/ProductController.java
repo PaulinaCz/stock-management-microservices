@@ -2,7 +2,7 @@ package com.czerniecka.product.controller;
 
 import com.czerniecka.product.dto.ProductDTO;
 import com.czerniecka.product.service.ProductService;
-import com.czerniecka.product.vo.ResponseTemplateVO;
+import com.czerniecka.product.vo.ProductWithSupplierResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,9 +26,7 @@ public class ProductController {
     @GetMapping("")
     public ResponseEntity<List<ProductDTO>> getAllProducts() {
         List<ProductDTO> products = productService.findAll();
-
         return ResponseEntity.ok(products);
-
     }
 
     @GetMapping("/{productId}")
@@ -39,18 +37,9 @@ public class ProductController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @GetMapping("/{productId}/supplier")
-    public ResponseEntity getProductWithSupplier(@PathVariable UUID productId) {
-        Optional<ResponseTemplateVO> productWithSupplier = productService.getProductWithSupplier(productId);
-
-        return productWithSupplier.map(responseTemplateVO -> new ResponseEntity(responseTemplateVO, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity(HttpStatus.NOT_FOUND));
-
-    }
-
     @GetMapping("/category/{category}")
-    public ResponseEntity<List<ProductDTO>> getProductsByCategory(@PathVariable String category) {
-        List<ProductDTO> productsByCategory = productService.findProductsByCategory(category);
+    public ResponseEntity<List<ProductDTO>> getProductsWhereCategoryContains(@PathVariable String category) {
+        List<ProductDTO> productsByCategory = productService.findProductsWhereCategoryContains(category);
         return ResponseEntity.ok(productsByCategory);
     }
 
@@ -60,11 +49,21 @@ public class ProductController {
         return ResponseEntity.ok(productsBySupplier);
     }
 
+    @GetMapping("/{productId}/supplier")
+    public ResponseEntity getProductWithSupplier(@PathVariable UUID productId) {
+        Optional<ProductWithSupplierResponse> productWithSupplier = productService.getProductWithSupplier(productId);
+
+        return productWithSupplier
+                .map(productWithSupplierResponse -> new ResponseEntity(productWithSupplierResponse, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity(HttpStatus.NOT_FOUND));
+    }
+
     @PostMapping("")
     public ResponseEntity<ProductDTO> addProduct(@RequestBody ProductDTO productDTO) {
         Optional<ProductDTO> saved = productService.save(productDTO);
         return saved.map(product -> new ResponseEntity<>(product, HttpStatus.CREATED))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE));
+                .orElseGet(() -> new ResponseEntity("Error while creating product inventory. Product not saved.",
+                        HttpStatus.SERVICE_UNAVAILABLE));
     }
 
 }

@@ -5,7 +5,7 @@ import com.czerniecka.product.dto.ProductMapper;
 import com.czerniecka.product.entity.Product;
 import com.czerniecka.product.repository.ProductRepository;
 import com.czerniecka.product.vo.Inventory;
-import com.czerniecka.product.vo.ResponseTemplateVO;
+import com.czerniecka.product.vo.ProductWithSupplierResponse;
 import com.czerniecka.product.vo.Supplier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,7 +24,8 @@ public class ProductService {
     private final InventoryServiceClient inventoryServiceClient;
 
     @Autowired
-    public ProductService(ProductRepository productRepository, ProductMapper productMapper, SupplierServiceClient supplierServiceClient, InventoryServiceClient inventoryServiceClient) {
+    public ProductService(ProductRepository productRepository, ProductMapper productMapper,
+                          SupplierServiceClient supplierServiceClient, InventoryServiceClient inventoryServiceClient) {
         this.productRepository = productRepository;
         this.productMapper = productMapper;
         this.supplierServiceClient = supplierServiceClient;
@@ -44,9 +45,9 @@ public class ProductService {
 
     }
 
-    public List<ProductDTO> findProductsByCategory(String category) {
+    public List<ProductDTO> findProductsWhereCategoryContains(String category) {
 
-        List<Product> allByCategory = productRepository.findAllByCategory(category);
+        List<Product> allByCategory = productRepository.findProductByCategoryContaining(category);
         return productMapper.toProductsDTOs(allByCategory);
     }
 
@@ -56,15 +57,16 @@ public class ProductService {
         return productMapper.toProductsDTOs(allBySupplierId);
     }
 
-    public Optional<ResponseTemplateVO> getProductWithSupplier(UUID productId) {
-        ResponseTemplateVO vo = new ResponseTemplateVO();
-        Optional<Product> product = productRepository.findById(productId);
 
+    /* If supplier-service is unavailable, returns Product with empty Supplier object*/
+    public Optional<ProductWithSupplierResponse> getProductWithSupplier(UUID productId) {
+        ProductWithSupplierResponse response = new ProductWithSupplierResponse();
+        Optional<Product> product = productRepository.findById(productId);
         if (product.isPresent()) {
             Supplier supplier = supplierServiceClient.getSupplier(product.get().getSupplierId());
-            vo.setProduct(productMapper.toProductDTO(product.get()));
-            vo.setSupplier(supplier);
-            return Optional.of(vo);
+            response.setProduct(productMapper.toProductDTO(product.get()));
+            response.setSupplier(supplier);
+            return Optional.of(response);
         } else {
             return Optional.empty();
         }
@@ -75,11 +77,13 @@ public class ProductService {
         Product product = productMapper.toProduct(productDTO);
         Product saved = productRepository.save(product);
 
+        /* Creates inventory - SET productId equal saved Product id and quantity equal 0 */
         Inventory inventory = new Inventory();
         inventory.setProductId(saved.getId());
         inventory.setQuantity(0);
         HttpStatus httpStatus = inventoryServiceClient.postInventory(inventory);
 
+        /* If unable to create new inventory -> Product will not be saved*/
         if(httpStatus.equals(HttpStatus.SERVICE_UNAVAILABLE)){
             productRepository.delete(product);
             return Optional.empty();
