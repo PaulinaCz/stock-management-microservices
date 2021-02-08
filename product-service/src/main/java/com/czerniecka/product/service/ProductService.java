@@ -7,7 +7,7 @@ import com.czerniecka.product.dto.ProductMapper;
 import com.czerniecka.product.entity.Product;
 import com.czerniecka.product.repository.ProductRepository;
 import com.czerniecka.product.vo.Inventory;
-import com.czerniecka.product.vo.ProductWithSupplierResponse;
+import com.czerniecka.product.vo.ProductSupplierResponse;
 import com.czerniecka.product.vo.Supplier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -61,8 +61,8 @@ public class ProductService {
 
 
     /* If supplier-service is unavailable, returns Product with empty Supplier object*/
-    public Optional<ProductWithSupplierResponse> getProductWithSupplier(UUID productId) {
-        ProductWithSupplierResponse response = new ProductWithSupplierResponse();
+    public Optional<ProductSupplierResponse> getProductWithSupplier(UUID productId) {
+        ProductSupplierResponse response = new ProductSupplierResponse();
         Optional<Product> product = productRepository.findById(productId);
         if (product.isPresent()) {
             Supplier supplier = supplierServiceClient.getSupplier(product.get().getSupplierId());

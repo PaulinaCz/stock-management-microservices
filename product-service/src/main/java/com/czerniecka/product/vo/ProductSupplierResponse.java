@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductWithSupplierResponse {
+public class ProductSupplierResponse {
 
     private ProductDTO product;
     private Supplier supplier;

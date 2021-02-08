@@ -2,7 +2,7 @@ package com.czerniecka.product.controller;
 
 import com.czerniecka.product.dto.ProductDTO;
 import com.czerniecka.product.service.ProductService;
-import com.czerniecka.product.vo.ProductWithSupplierResponse;
+import com.czerniecka.product.vo.ProductSupplierResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -51,10 +51,10 @@ public class ProductController {
 
     @GetMapping("/{productId}/supplier")
     public ResponseEntity getProductWithSupplier(@PathVariable UUID productId) {
-        Optional<ProductWithSupplierResponse> productWithSupplier = productService.getProductWithSupplier(productId);
+        Optional<ProductSupplierResponse> productWithSupplier = productService.getProductWithSupplier(productId);
 
         return productWithSupplier
-                .map(productWithSupplierResponse -> new ResponseEntity(productWithSupplierResponse, HttpStatus.OK))
+                .map(productSupplierResponse -> new ResponseEntity(productSupplierResponse, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity(HttpStatus.NOT_FOUND));
     }
 
