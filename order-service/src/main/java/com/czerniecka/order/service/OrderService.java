@@ -13,6 +13,7 @@ import com.czerniecka.order.vo.OrderProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,6 +75,7 @@ public class OrderService {
         return result;
     }
 
+    @Transactional(rollbackFor = CustomException.class)
     public Optional<OrderDTO> save(OrderDTO orderDTO) {
         Order order = orderMapper.toOrder(orderDTO);
         Order saved = orderRepository.save(order);
@@ -93,7 +95,6 @@ public class OrderService {
                 return Optional.empty();
             }
         } else {
-            orderRepository.delete(saved);
             throw new CustomException("Sorry. Unable to checkout - not enough items in stock.", HttpStatus.BAD_REQUEST);
         }
 
