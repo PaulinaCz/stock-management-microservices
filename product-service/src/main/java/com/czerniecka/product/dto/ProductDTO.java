@@ -14,8 +14,10 @@ public class ProductDTO {
 
     @NotBlank(message = "Please provide product name")
     private String name;
+    @NotNull
     @Positive
     private BigDecimal buyingPrice;
+    @NotNull
     @Positive
     private BigDecimal sellingPrice;
     @NotBlank(message = "Please provide category")
