@@ -99,6 +99,11 @@ public class OrderService {
         }
 
     }
+
+    public void updateOrderStatus(UUID orderId, String orderStatus){
+        orderRepository.changeOrderStatus(orderId, orderStatus);
+    }
+
 }
 
 

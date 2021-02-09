@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -54,6 +55,12 @@ public class OrderController {
         return saved.map(order -> new ResponseEntity<>(order, HttpStatus.CREATED))
                 .orElseGet(() -> new ResponseEntity("Service is currently busy. Please try again later.",
                         HttpStatus.SERVICE_UNAVAILABLE));
+    }
+
+    @PatchMapping("/{orderId}")
+    public ResponseEntity updateOrderStatus(@PathVariable UUID orderId, @RequestBody @NotNull String orderStatus){
+        orderService.updateOrderStatus(orderId, orderStatus);
+        return ResponseEntity.ok("Order status updated");
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
