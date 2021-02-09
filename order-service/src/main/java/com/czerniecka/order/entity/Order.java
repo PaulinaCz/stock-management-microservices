@@ -20,6 +20,7 @@ public class Order {
     @Type(type="org.hibernate.type.UUIDCharType")
     private UUID id;
     private String paymentType;
+    
     private String orderStatus;
 
     @CreationTimestamp
@@ -32,4 +33,7 @@ public class Order {
     @Type(type="org.hibernate.type.UUIDCharType")
     private UUID customerId;
 
+    public void setOrderStatus(String orderStatus) {
+        this.orderStatus = "Order placed";
+    }
 }
