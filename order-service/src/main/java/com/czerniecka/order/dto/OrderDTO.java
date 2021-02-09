@@ -10,6 +10,7 @@ import java.util.UUID;
 @Data
 public class OrderDTO {
 
+    @NotNull
     @Pattern(regexp = "^(MasterCard|Visa|AmericanExpress|mastercard|visa|americanexpress)$",
             message = "Please check which payment types are available")
     private String paymentType;
