@@ -32,8 +32,6 @@ public class InventoryServiceClient {
         return new Inventory();
     }
 
-    // Put/Patch method not working !
-
     @CircuitBreaker(name = "inventory-service", fallbackMethod = "fallbackPut")
     public HttpStatus putInventory(Inventory inventory){
         HttpEntity request = new HttpEntity(inventory);

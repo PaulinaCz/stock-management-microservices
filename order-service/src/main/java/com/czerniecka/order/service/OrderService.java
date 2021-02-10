@@ -75,32 +75,49 @@ public class OrderService {
         return result;
     }
 
+    public Inventory getInventory(UUID productId) {
+        return inventoryServiceClient.getInventory(productId);
+    }
+
+    /*
+    If inventory-service is not available while calling on GET method - fallback method will return empty Inventory object.
+    If save method receives empty Invoice object, it reverses save order to database.
+
+    If inventory-service is not available while calling on PUT method it will invoke fallback method.
+    If save method receives response HttpStatus.CREATED from inventory-service, it returns saved order.
+    If save method receives response on failure to connect to/save to inventory-service, it reverses save order to database.
+    */
     @Transactional(rollbackFor = CustomException.class)
     public Optional<OrderDTO> save(OrderDTO orderDTO) {
+
         Order order = orderMapper.toOrder(orderDTO);
         Order saved = orderRepository.save(order);
 
-        /*If inventory-service is not available, service client will invoke fallback method and
-        will stop executing rest of POST order*/
-        Inventory inventory = inventoryServiceClient.getInventory(saved.getProductId());
-        /* When enough items in stock - process order. If not - throw exception */
-        if (inventory.getQuantity() > orderDTO.getAmount()) {
-            inventory.setQuantity(inventory.getQuantity() - saved.getAmount());
-            HttpStatus httpStatus = inventoryServiceClient.putInventory(inventory);
+        Inventory inventory = getInventory(saved.getProductId());
+        if (inventory.getId() != null) {
 
-            if (httpStatus.equals(HttpStatus.CREATED)) {
-                return Optional.of(orderMapper.toOrderDTO(saved));
+            /* When enough items in stock - process order. If not - throw exception and rollback transaction*/
+            if (inventory.getQuantity() > orderDTO.getAmount()) {
+                inventory.setQuantity(inventory.getQuantity() - saved.getAmount());
+                HttpStatus httpStatus = inventoryServiceClient.putInventory(inventory);
+
+                if (httpStatus.equals(HttpStatus.CREATED)) {
+                    return Optional.of(orderMapper.toOrderDTO(saved));
+                } else {
+                    orderRepository.delete(saved);
+                    return Optional.empty();
+                }
             } else {
-                orderRepository.delete(saved);
-                return Optional.empty();
+                throw new CustomException("Sorry. Unable to checkout - not enough items in stock.", HttpStatus.BAD_REQUEST);
             }
         } else {
-            throw new CustomException("Sorry. Unable to checkout - not enough items in stock.", HttpStatus.BAD_REQUEST);
+            orderRepository.delete(saved);
+            return Optional.empty();
         }
 
     }
 
-    public void updateOrderStatus(UUID orderId, String orderStatus){
+    public void updateOrderStatus(UUID orderId, String orderStatus) {
         orderRepository.changeOrderStatus(orderId, orderStatus);
     }
 
