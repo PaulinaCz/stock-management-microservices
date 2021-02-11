@@ -6,9 +6,12 @@ import com.czerniecka.product.vo.ProductSupplierResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
 import java.time.LocalDateTime;
@@ -26,47 +29,47 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @GetMapping("")
-    public ResponseEntity<List<ProductDTO>> getAllProducts() {
-        List<ProductDTO> products = productService.findAll();
-        return ResponseEntity.ok(products);
+    @GetMapping(value = "", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ProductDTO> getAllProducts() {
+        Flux<ProductDTO> products = productService.findAll();
+        return products;
     }
 
-    @GetMapping("/{productId}")
-    public ResponseEntity<ProductDTO> getProductById(@PathVariable UUID productId) {
-        Optional<ProductDTO> product = productService.findProductById(productId);
+    @GetMapping("/{id}")
+    public ResponseEntity<Mono<ProductDTO>> getProductById(@PathVariable("id") String productId) {
+        Mono<ProductDTO> product = productService.findProductById(productId);
 
-        return product.map(productDTO -> new ResponseEntity<>(productDTO, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        HttpStatus status = product != null ? HttpStatus.OK : HttpStatus.NOT_FOUND;
+
+        return new ResponseEntity<>(product, status);
     }
 
     @GetMapping("/category/{category}")
-    public ResponseEntity<List<ProductDTO>> getProductsWhereCategoryContains(@PathVariable String category) {
-        List<ProductDTO> productsByCategory = productService.findProductsWhereCategoryContains(category);
-        return ResponseEntity.ok(productsByCategory);
+    public Flux<ProductDTO> getProductsWhereCategoryContains(@PathVariable String category) {
+        return productService.findProductsWhereCategoryContains(category);
     }
 
     @GetMapping("/supplier/{supplierId}")
-    public ResponseEntity<List<ProductDTO>> getProductsBySupplier(@PathVariable UUID supplierId) {
-        List<ProductDTO> productsBySupplier = productService.findProductsBySupplier(supplierId);
-        return ResponseEntity.ok(productsBySupplier);
+    public Flux<ProductDTO> getProductsBySupplier(@PathVariable String supplierId) {
+        return productService.findProductsBySupplier(supplierId);
     }
 
     @GetMapping("/{productId}/supplier")
-    public ResponseEntity getProductWithSupplier(@PathVariable UUID productId) {
-        Optional<ProductSupplierResponse> productWithSupplier = productService.getProductWithSupplier(productId);
+    public ResponseEntity<Mono<ProductSupplierResponse>> getProductWithSupplier(@PathVariable String productId) {
+        Mono<ProductSupplierResponse> productWithSupplier = productService.getProductWithSupplier(productId);
 
-        return productWithSupplier
-                .map(productSupplierResponse -> new ResponseEntity(productSupplierResponse, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity(HttpStatus.NOT_FOUND));
+        HttpStatus status = productWithSupplier != null ? HttpStatus.OK : HttpStatus.NOT_FOUND;
+
+        return new ResponseEntity<>(productWithSupplier, status);
     }
 
     @PostMapping("")
-    public ResponseEntity<ProductDTO> addProduct(@Valid @RequestBody ProductDTO productDTO) {
-        Optional<ProductDTO> saved = productService.save(productDTO);
-        return saved.map(product -> new ResponseEntity<>(product, HttpStatus.CREATED))
-                .orElseGet(() -> new ResponseEntity("Error while creating product inventory. Product not saved.",
-                        HttpStatus.SERVICE_UNAVAILABLE));
+    public ResponseEntity<Mono<ProductDTO>> addProduct(@Valid @RequestBody ProductDTO productDTO) {
+        Mono<ProductDTO> saved = productService.save(productDTO);
+
+        HttpStatus status = saved != null ? HttpStatus.CREATED : HttpStatus.SERVICE_UNAVAILABLE;
+
+        return new ResponseEntity<>(saved, status);
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)

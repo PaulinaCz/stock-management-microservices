@@ -10,6 +10,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Inventory {
-    private UUID productId;
+    private String productId;
     private int quantity;
 }

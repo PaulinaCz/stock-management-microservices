@@ -12,10 +12,13 @@ import com.czerniecka.product.vo.Supplier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -34,65 +37,68 @@ public class ProductService {
         this.inventoryServiceClient = inventoryServiceClient;
     }
 
-    public List<ProductDTO> findAll() {
+    public Flux<ProductDTO> findAll() {
 
-        List<Product> all = productRepository.findAll();
-        return productMapper.toProductsDTOs(all);
+        Flux<Product> all = productRepository.findAll();
+        return Flux.just(productMapper.toProductsDTOs(all));
     }
 
-    public Optional<ProductDTO> findProductById(UUID productId) {
+    public Mono<ProductDTO> findProductById(String productId) {
 
-        Optional<Product> byId = productRepository.findById(productId);
+        Mono<Product> byId = productRepository.findById(productId);
         return byId.map(productMapper::toProductDTO);
 
     }
 
-    public List<ProductDTO> findProductsWhereCategoryContains(String category) {
+    public Flux<ProductDTO> findProductsWhereCategoryContains(String category) {
 
-        List<Product> allByCategory = productRepository.findProductByCategoryContaining(category);
-        return productMapper.toProductsDTOs(allByCategory);
+        Flux<Product> allByCategory = productRepository.findProductByCategoryContaining(category);
+
+        return Flux.just(productMapper.toProductsDTOs(allByCategory));
+
     }
 
-    public List<ProductDTO> findProductsBySupplier(UUID supplierId) {
+    public Flux<ProductDTO> findProductsBySupplier(String supplierId) {
 
-        List<Product> allBySupplierId = productRepository.findAllBySupplierId(supplierId);
-        return productMapper.toProductsDTOs(allBySupplierId);
+        Flux<Product> allBySupplierId = productRepository.findAllBySupplierId(supplierId);
+
+        return Flux.just(productMapper.toProductsDTOs(allBySupplierId));
     }
 
 
     /* If supplier-service is unavailable, returns Product with empty Supplier object*/
-    public Optional<ProductSupplierResponse> getProductWithSupplier(UUID productId) {
+    public Mono<ProductSupplierResponse> getProductWithSupplier(String productId) {
         ProductSupplierResponse response = new ProductSupplierResponse();
-        Optional<Product> product = productRepository.findById(productId);
-        if (product.isPresent()) {
-            Supplier supplier = supplierServiceClient.getSupplier(product.get().getSupplierId());
-            response.setProduct(productMapper.toProductDTO(product.get()));
+        Mono<Product> product = productRepository.findById(productId);
+        return product.flatMap(p -> {
+            Supplier supplier = supplierServiceClient.getSupplier(p.getSupplierId());
+            response.setProduct(productMapper.toProductDTO(p));
             response.setSupplier(supplier);
-            return Optional.of(response);
-        } else {
-            return Optional.empty();
-        }
+            return Mono.just(response);
+        })
+                .or(Mono.empty());
     }
 
-    public Optional<ProductDTO> save(ProductDTO productDTO) {
+    public Mono<ProductDTO> save(ProductDTO productDTO) {
 
         Product product = productMapper.toProduct(productDTO);
-        Product saved = productRepository.save(product);
+        Mono<Product> saved = productRepository.save(product);
 
         /* Creates inventory - SET productId equal saved Product id and quantity equal 0 */
-        Inventory inventory = new Inventory();
-        inventory.setProductId(saved.getId());
-        inventory.setQuantity(0);
-        HttpStatus httpStatus = inventoryServiceClient.postInventory(inventory);
+        return saved.flatMap(p -> {
+            Inventory inventory = new Inventory();
+            inventory.setProductId(p.getId());
+            inventory.setQuantity(0);
 
-        /* If unable to create new inventory -> Product will not be saved*/
-        if(httpStatus.equals(HttpStatus.SERVICE_UNAVAILABLE)){
-            productRepository.delete(product);
-            return Optional.empty();
-        }else{
-            return Optional.of(productMapper.toProductDTO(saved));
-        }
-
+            HttpStatus httpStatus = inventoryServiceClient.postInventory(inventory);
+            /* If unable to create new inventory -> Product will not be saved*/
+            if(httpStatus.equals(HttpStatus.SERVICE_UNAVAILABLE)){
+                productRepository.delete(p);
+                return Mono.empty();
+            }else{
+                return Mono.just(productMapper.toProductDTO(p));
+            }
+        }).or(Mono.empty());
     }
 
 }

@@ -2,39 +2,34 @@ package com.czerniecka.product.entity;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-
-@Entity
+@Document(collection = "products")
 @Data
 @NoArgsConstructor
 public class Product {
 
     @Id
-    @GeneratedValue
-    @Type(type="org.hibernate.type.UUIDCharType")
-    private UUID id;
+    private String id;
     private String name;
     private BigDecimal buyingPrice;
     private BigDecimal sellingPrice;
     private String category;
 
-    @CreationTimestamp
+    @CreatedDate
     private LocalDateTime createdOn;
 
-    @UpdateTimestamp
+    @LastModifiedDate
     private LocalDateTime lastModified;
 
-    @Type(type="org.hibernate.type.UUIDCharType")
-    private UUID supplierId;
+    private String supplierId;
 
 }

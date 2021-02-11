@@ -1,20 +1,20 @@
 package com.czerniecka.product.repository;
 
 import com.czerniecka.product.entity.Product;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
 
-import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface ProductRepository extends JpaRepository<Product, UUID> {
+public interface ProductRepository extends ReactiveCrudRepository<Product, String> {
 
-    @Query(value = "SELECT p FROM Product p WHERE p.category LIKE %?1%")
-    List<Product> findProductByCategoryContaining(String category);
+    @Query(value = "{ 'category' : {$regex : ?0, $options: 'i'}}")
+    Flux<Product> findProductByCategoryContaining(String category);
     
-    List<Product> findAllBySupplierId(UUID supplierId);
+    Flux<Product> findAllBySupplierId(String supplierId);
 
 
 }

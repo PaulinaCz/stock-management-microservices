@@ -19,12 +19,12 @@ public class SupplierServiceClient {
     }
 
     @CircuitBreaker(name="supplier-service", fallbackMethod = "fallback")
-    public Supplier getSupplier(UUID supplierId){
+    public Supplier getSupplier(String supplierId){
         return restTemplate.getForObject("http://supplier-service/suppliers/" + supplierId,
                 Supplier.class);
     }
 
-    public Supplier fallback(UUID supplierId, Throwable throwable){
+    public Supplier fallback(String supplierId, Throwable throwable){
         System.out.println("Service is currently busy. Please try again later.");
         return new Supplier();
     }

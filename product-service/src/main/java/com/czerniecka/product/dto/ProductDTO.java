@@ -24,5 +24,5 @@ public class ProductDTO {
     @Size(max = 20, message = "Category cannot be longer than 20 characters")
     private String category;
     @NotNull(message = "Please add supplier")
-    private UUID supplierId;
+    private String supplierId;
 }
