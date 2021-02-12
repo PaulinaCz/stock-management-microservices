@@ -15,10 +15,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -40,7 +36,7 @@ public class ProductService {
     public Flux<ProductDTO> findAll() {
 
         Flux<Product> all = productRepository.findAll();
-        return Flux.just(productMapper.toProductsDTOs(all));
+        return all.map(productMapper::toProductDTO);
     }
 
     public Mono<ProductDTO> findProductById(String productId) {
@@ -54,7 +50,7 @@ public class ProductService {
 
         Flux<Product> allByCategory = productRepository.findProductByCategoryContaining(category);
 
-        return Flux.just(productMapper.toProductsDTOs(allByCategory));
+        return allByCategory.map(productMapper::toProductDTO);
 
     }
 
@@ -62,7 +58,7 @@ public class ProductService {
 
         Flux<Product> allBySupplierId = productRepository.findAllBySupplierId(supplierId);
 
-        return Flux.just(productMapper.toProductsDTOs(allBySupplierId));
+        return allBySupplierId.map(productMapper::toProductDTO);
     }
 
 

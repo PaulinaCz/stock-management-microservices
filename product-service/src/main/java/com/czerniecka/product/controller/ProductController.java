@@ -6,7 +6,6 @@ import com.czerniecka.product.vo.ProductSupplierResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -29,10 +28,9 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @GetMapping(value = "", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @GetMapping(value = "", produces = "application/json")
     public Flux<ProductDTO> getAllProducts() {
-        Flux<ProductDTO> products = productService.findAll();
-        return products;
+        return productService.findAll();
     }
 
     @GetMapping("/{id}")
