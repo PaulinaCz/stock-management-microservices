@@ -19,12 +19,12 @@ public class ProductServiceClient {
     }
 
     @CircuitBreaker(name = "product-service", fallbackMethod = "fallback")
-    public Product getProduct(UUID productId){
+    public Product getProduct(String productId){
         return restTemplate.getForObject("http://product-service/products/" + productId,
                 Product.class);
     }
 
-    public Product fallback(UUID productId, Throwable throwable){
+    public Product fallback(String productId, Throwable throwable){
         System.out.println("Service is currently busy. Please try again later.");
         return new Product();
     }

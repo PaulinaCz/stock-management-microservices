@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -28,39 +30,43 @@ public class OrderController {
     }
 
     @GetMapping("")
-    public ResponseEntity<List<OrderDTO>> getAllOrders(){
-        List<OrderDTO> orders = orderService.findAll();
-        return ResponseEntity.ok(orders);
+    public Flux<OrderDTO> getAllOrders(){
+        return orderService.findAll();
 
     }
 
-    @GetMapping("/{orderId}")
-    public ResponseEntity<OrderProductResponse> getOrderWithProduct(@PathVariable UUID orderId){
-        Optional<OrderProductResponse> orderWithProduct = orderService.getOrderWithProduct(orderId);
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/{id}")
+    public Mono<OrderProductResponse> getOrderWithProduct(@PathVariable("id") String orderId){
+        
+        return orderService.getOrderWithProduct(orderId)
+                .switchIfEmpty(Mono.error(new Exception(orderId)));
 
-        return orderWithProduct
-                .map(orderProductResponse -> new ResponseEntity<>(orderProductResponse, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<OrderProductResponse>> getOrdersWithProductsForCustomer(@PathVariable UUID customerId){
-        List<OrderProductResponse> orders = orderService.getOrdersWithProductsForCustomer(customerId);
-        return ResponseEntity.ok(orders);
-    }
-
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("")
-    public ResponseEntity<OrderDTO> addOrder(@Valid @RequestBody OrderDTO orderDTO){
-        Optional<OrderDTO> saved = orderService.save(orderDTO);
-        return saved.map(order -> new ResponseEntity<>(order, HttpStatus.CREATED))
-                .orElseGet(() -> new ResponseEntity("Service is currently busy. Please try again later.",
-                        HttpStatus.SERVICE_UNAVAILABLE));
+    public Mono<OrderDTO> addOrder(@Valid @RequestBody OrderDTO orderDTO){
+        
+        return orderService.save(orderDTO);
     }
+//
+//    @PatchMapping("/{orderId}")
+//    public ResponseEntity updateOrderStatus(@PathVariable String orderId, @RequestBody @NotNull String orderStatus){
+//        orderService.updateOrderStatus(orderId, orderStatus);
+//        return ResponseEntity.ok("Order status updated");
+//    }
 
-    @PatchMapping("/{orderId}")
-    public ResponseEntity updateOrderStatus(@PathVariable UUID orderId, @RequestBody @NotNull String orderStatus){
-        orderService.updateOrderStatus(orderId, orderStatus);
-        return ResponseEntity.ok("Order status updated");
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(Exception.class)
+    public Map<String, Object> handleNotFound(Exception e){
+
+        Map<String, Object> errorBody = new HashMap<>();
+
+        errorBody.put("timestamp", LocalDateTime.now());
+        errorBody.put("error", "Order " + e.getMessage() + " not found");
+
+        return errorBody;
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
