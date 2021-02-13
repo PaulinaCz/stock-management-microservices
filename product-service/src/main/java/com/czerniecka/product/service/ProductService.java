@@ -92,7 +92,7 @@ public class ProductService {
                 productRepository.delete(p);
                 return Mono.empty();
             }else{
-                return Mono.just(productMapper.toProductDTO(p));
+                return saved.map(productMapper::toProductDTO);
             }
         }).or(Mono.empty());
     }
