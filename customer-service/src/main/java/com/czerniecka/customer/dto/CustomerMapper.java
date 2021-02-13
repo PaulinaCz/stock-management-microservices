@@ -9,6 +9,5 @@ import java.util.List;
 public interface CustomerMapper {
 
     CustomerDTO toCustomerDTO(Customer customer);
-    List<CustomerDTO> toCustomersDTOs(List<Customer> customers);
     Customer toCustomer (CustomerDTO customerDTO);
 }
