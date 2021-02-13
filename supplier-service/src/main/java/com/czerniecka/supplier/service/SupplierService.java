@@ -6,10 +6,9 @@ import com.czerniecka.supplier.entity.Supplier;
 import com.czerniecka.supplier.repository.SupplierRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class SupplierService {
@@ -23,38 +22,35 @@ public class SupplierService {
         this.supplierMapper = supplierMapper;
     }
 
-    public List<SupplierDTO> findAll() {
+    public Flux<SupplierDTO> findAll() {
 
-        List<Supplier> all = supplierRepository.findAll();
-        return supplierMapper.toSuppliersDTOs(all);
+        Flux<Supplier> all = supplierRepository.findAll();
+        return all.map(supplierMapper::toSupplierDTO);
     }
 
-    public Optional<SupplierDTO> findSupplierById(UUID supplierId) {
+    public Mono<SupplierDTO> findSupplierById(String supplierId) {
 
-        Optional<Supplier> byId = supplierRepository.findById(supplierId);
+        Mono<Supplier> byId = supplierRepository.findById(supplierId);
         return byId.map(supplierMapper::toSupplierDTO);
     }
 
-    public SupplierDTO save(SupplierDTO supplierDTO) {
+    public Mono<SupplierDTO> save(SupplierDTO supplierDTO) {
 
         Supplier supplier = supplierMapper.toSupplier(supplierDTO);
-        Supplier saved = supplierRepository.save(supplier);
-        return supplierMapper.toSupplierDTO(saved);
+        Mono<Supplier> saved = supplierRepository.save(supplier);
+        return saved.map(supplierMapper::toSupplierDTO);
     }
 
-    public boolean updateSupplier(UUID supplierId, SupplierDTO supplierDTO) {
+    public Mono<SupplierDTO> updateSupplier(String supplierId, SupplierDTO supplierDTO) {
 
-        Optional<Supplier> s = supplierRepository.findById(supplierId);
+        return supplierRepository.findById(supplierId)
+                .switchIfEmpty(Mono.empty())
+                .flatMap(supplier -> {
+                    supplier.setName(supplierDTO.getName());
+                    supplier.setEmail(supplierDTO.getEmail());
+                    Mono<Supplier> updated = supplierRepository.save(supplier);
+                    return updated.map(supplierMapper::toSupplierDTO);
+                });
 
-        if(s.isPresent()){
-            Supplier supplier = s.get();
-            supplier.setName(supplierDTO.getName());
-            supplier.setEmail(supplierDTO.getEmail());
-
-            supplierRepository.save(supplier);
-            return true;
-        }else{
-            return false;
-        }
     }
 }

@@ -5,9 +5,10 @@ import com.czerniecka.supplier.service.SupplierService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
 import java.time.LocalDateTime;
@@ -25,35 +26,44 @@ public class SupplierController {
         this.supplierService = supplierService;
     }
 
-    @GetMapping("")
-    public ResponseEntity<List<SupplierDTO>> getAllSuppliers(){
-        List<SupplierDTO> all = supplierService.findAll();
-        return ResponseEntity.ok(all);
+    @GetMapping(value = "", produces = "application/json")
+    public Flux<SupplierDTO> getAllSuppliers(){
+        return supplierService.findAll();
     }
 
-    @GetMapping("/{supplierId}")
-    public ResponseEntity getSupplierById(@PathVariable UUID supplierId){
-        Optional<SupplierDTO> supplier = supplierService.findSupplierById(supplierId);
-
-        return supplier.map(supplierDTO -> new ResponseEntity(supplierDTO, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity(HttpStatus.NOT_FOUND));
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/{id}")
+    public Mono<SupplierDTO> getSupplierById(@PathVariable("id") String supplierId){
+        
+        return supplierService.findSupplierById(supplierId)
+                .switchIfEmpty(Mono.error(new Exception(supplierId)));
     }
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("")
-    public ResponseEntity<SupplierDTO> addSupplier(@RequestBody @Valid SupplierDTO supplierDTO){
-        SupplierDTO saved = supplierService.save(supplierDTO);
-        return new ResponseEntity<>(saved, HttpStatus.CREATED);
+    public Mono<SupplierDTO> addSupplier(@RequestBody @Valid SupplierDTO supplierDTO){
+        return supplierService.save(supplierDTO);
     }
 
-    @PutMapping("/{supplierId}")
-    public ResponseEntity<Void> updateSupplier(@PathVariable UUID supplierId,
+    @ResponseStatus(HttpStatus.CREATED)
+    @PutMapping("/{id}")
+    public Mono<SupplierDTO> updateSupplier(@PathVariable("id") String supplierId,
                                @RequestBody @Valid SupplierDTO supplierDTO){
 
-        if(!supplierService.updateSupplier(supplierId, supplierDTO)){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }else{
-            return new ResponseEntity<>(HttpStatus.CREATED);
-        }
+        return supplierService.updateSupplier(supplierId, supplierDTO)
+                .switchIfEmpty(Mono.error(new Exception(supplierId)));
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(Exception.class)
+    public Map<String, Object> handleNotFound(Exception ex){
+
+        Map<String, Object> errorBody = new HashMap<>();
+
+        errorBody.put("timestamp", LocalDateTime.now());
+        errorBody.put("error", "Customer " + ex.getMessage() + " not found");
+
+        return errorBody;
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
