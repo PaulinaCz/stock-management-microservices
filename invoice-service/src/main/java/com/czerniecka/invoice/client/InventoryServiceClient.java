@@ -24,7 +24,7 @@ public class InventoryServiceClient {
 
     @CircuitBreaker(name = "inventory-service", fallbackMethod = "fallbackGet")
     public Inventory getInventory(UUID productId){
-        return restTemplate.getForObject("http://inventory-service/inventory/product/" + productId
+        return restTemplate.getForObject("http://inventory-service/inventories/product/" + productId
                 ,Inventory.class);
     }
 
@@ -38,7 +38,7 @@ public class InventoryServiceClient {
     public HttpStatus putInventory(Inventory inventory){
 
         HttpEntity request = new HttpEntity(inventory);
-        return restTemplate.exchange("http://inventory-service/inventory/" + inventory.getId(),
+        return restTemplate.exchange("http://inventory-service/inventories/" + inventory.getId(),
                 HttpMethod.PUT, request, Void.class ).getStatusCode();
     }
 
