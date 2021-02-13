@@ -1,18 +1,21 @@
 package com.czerniecka.inventory.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class InventoryDTO {
 
-    private UUID id;
+    private String id;
 
     @NotNull(message = "Product Id must not be null")
-    private UUID productId;
+    private String productId;
 
     @NotNull
     private int quantity;

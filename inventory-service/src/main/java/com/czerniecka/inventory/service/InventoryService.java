@@ -9,6 +9,8 @@ import com.czerniecka.inventory.vo.Product;
 import com.czerniecka.inventory.vo.InventoryProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -30,70 +32,70 @@ public class InventoryService {
         this.productServiceClient = productServiceClient;
     }
 
-    public List<InventoryDTO> findAll() {
+    public Flux<InventoryDTO> findAll() {
 
-        List<Inventory> all = inventoryRepository.findAll();
-        return inventoryMapper.toInventoryDTOs(all);
+        Flux<Inventory> all = inventoryRepository.findAll();
+        return all.map(inventoryMapper::toInventoryDTO);
     }
 
     /* When product-service unavailable, returns List of Inventories with empty Product objects */
-    public List<InventoryProductResponse> findAllWithProducts() {
-        List<Inventory> inventories = inventoryRepository.findAll();
+    public Flux<List<InventoryProductResponse>> findAllWithProducts() {
+        Flux<Inventory> inventories = inventoryRepository.findAll();
         List<InventoryProductResponse> result = new ArrayList<>();
 
-        for (Inventory i : inventories) {
-            Product product = productServiceClient.getProduct(i.getProductId());
-            product.setId(i.getProductId());
-            InventoryProductResponse vo = new InventoryProductResponse();
-            vo.setInventory(inventoryMapper.toInventoryDTO(i));
-            vo.setProduct(product);
-            result.add(vo);
-        }
-        return result;
+        inventories.map(
+                i -> {
+                    Product product = productServiceClient.getProduct(i.getProductId());
+                    product.setId(i.getProductId());
+                    InventoryProductResponse vo = new InventoryProductResponse();
+                    vo.setInventory(inventoryMapper.toInventoryDTO(i));
+                    vo.setProduct(product);
+                    result.add(vo);
+                    return result;
+                }
+        );
+        
+        return Flux.just(result);
     }
 
     /* When product-service unavailable, returns Inventory with empty Product object */
-    public Optional<InventoryProductResponse> findInventoryById(UUID inventoryId) {
-        Optional<Inventory> i = inventoryRepository.findById(inventoryId);
-        InventoryProductResponse response = new InventoryProductResponse();
-
-        if (i.isPresent()) {
-            Inventory inventory = i.get();
-            Product product = productServiceClient.getProduct(inventory.getProductId());
-            product.setId(inventory.getProductId());
-            response.setInventory(inventoryMapper.toInventoryDTO(inventory));
-            response.setProduct(product);
-            return Optional.of(response);
-        } else {
-            return Optional.empty();
-        }
+    public Mono<InventoryProductResponse> findInventoryById(String inventoryId) {
+        Mono<Inventory> byId = inventoryRepository.findById(inventoryId);
+        return byId.switchIfEmpty(Mono.empty())
+                .flatMap(inventory -> {
+                    InventoryProductResponse response = new InventoryProductResponse();
+                    Product product = productServiceClient.getProduct(inventory.getProductId());
+                    product.setId(inventory.getProductId());
+                    response.setInventory(inventoryMapper.toInventoryDTO(inventory));
+                    response.setProduct(product);
+                    return Mono.just(response);
+                });
     }
 
-    public Optional<InventoryDTO> findInventoryByProductId(UUID productId) {
-        Optional<Inventory> inventory = inventoryRepository.findByProductId(productId);
+    public Mono<InventoryDTO> findInventoryByProductId(String productId) {
+        Mono<Inventory> inventory = inventoryRepository.findByProductId(productId);
         return inventory.map(inventoryMapper::toInventoryDTO);
     }
 
-    public InventoryDTO save(InventoryDTO inventoryDTO) {
+    public Mono<InventoryDTO> save(InventoryDTO inventoryDTO) {
         Inventory inventory = inventoryMapper.toInventory(inventoryDTO);
-        Inventory saved = inventoryRepository.save(inventory);
-        return inventoryMapper.toInventoryDTO(saved);
+        Mono<Inventory> saved = inventoryRepository.save(inventory);
+        return saved.map(inventoryMapper::toInventoryDTO);
     }
 
-    public boolean updateInventory(UUID inventoryId, InventoryDTO inventoryDTO) {
-        Optional<Inventory> i = inventoryRepository.findById(inventoryId);
-
-        if(i.isPresent()){
-            Inventory inventory = i.get();
-            inventory.setLastModified(LocalDateTime.now());
-            inventory.setProductId(inventoryDTO.getProductId());
-            inventory.setQuantity(inventoryDTO.getQuantity());
-
-            inventoryRepository.save(inventory);
-            return true;
-        }else{
-            return false;
-        }
+    public Mono<InventoryDTO> updateInventory(String inventoryId, InventoryDTO inventoryDTO) {
+        
+        return inventoryRepository.findById(inventoryId)
+                .switchIfEmpty(Mono.empty())
+                .flatMap(
+                        inventory -> {
+                            inventory.setQuantity(inventoryDTO.getQuantity());
+                            inventory.setLastModified(LocalDateTime.now());
+                            Mono<Inventory> updated = inventoryRepository.save(inventory);
+                            return updated.map(inventoryMapper::toInventoryDTO);
+                        }
+                );
+        
     }
 
 

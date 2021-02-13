@@ -6,9 +6,10 @@ import com.czerniecka.inventory.vo.InventoryProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
 import java.time.LocalDateTime;
@@ -16,7 +17,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/inventory")
+@RequestMapping("/inventories")
 public class InventoryController {
 
     private final InventoryService inventoryService;
@@ -26,47 +27,70 @@ public class InventoryController {
         this.inventoryService = inventoryService;
     }
 
-    @GetMapping("")
-    public ResponseEntity<List<InventoryDTO>> getAllInventory(){
-        List<InventoryDTO> all = inventoryService.findAll();
-        return ResponseEntity.ok(all);
+    @GetMapping(value = "", produces = "application/json")
+    public Flux<InventoryDTO> getAllInventory(){
+        return inventoryService.findAll();
     }
 
     @GetMapping("/products")
-    public ResponseEntity<List<InventoryProductResponse>> getAllWithProducts(){
-        List<InventoryProductResponse> allWithProducts = inventoryService.findAllWithProducts();
-        return ResponseEntity.ok(allWithProducts);
+    public Flux<List<InventoryProductResponse>> getAllWithProducts(){
+        return inventoryService.findAllWithProducts();
     }
 
-    @GetMapping("/{inventoryId}")
-    public ResponseEntity<InventoryProductResponse> getInventoryById(@PathVariable UUID inventoryId){
-        Optional<InventoryProductResponse> inventoryById = inventoryService.findInventoryById(inventoryId);
-        return inventoryById.map(inventoryProductResponse -> new ResponseEntity<>(inventoryProductResponse, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/{id}")
+    public Mono<InventoryProductResponse> getInventoryById(@PathVariable("id") String inventoryId){
+
+        return inventoryService.findInventoryById(inventoryId)
+                .switchIfEmpty(Mono.error(new Exception(inventoryId)));
     }
 
-    @GetMapping("/product/{productId}")
-    public ResponseEntity<InventoryDTO> getInventoryByProductId(@PathVariable UUID productId){
-        Optional<InventoryDTO> i = inventoryService.findInventoryByProductId(productId);
-        return i.map(inventoryDTO -> new ResponseEntity<>(inventoryDTO, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/product/{id}")
+    public Mono<InventoryDTO> getInventoryByProductId(@PathVariable("id") String productId){
+        return inventoryService.findInventoryByProductId(productId)
+                .switchIfEmpty(Mono.error(new Error(productId)));
+
     }
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("")
-    public ResponseEntity<InventoryDTO> addInventory(@RequestBody @Valid InventoryDTO inventoryDTO){
-        InventoryDTO saved = inventoryService.save(inventoryDTO);
-        return new ResponseEntity<>(saved, HttpStatus.CREATED);
+    public Mono<InventoryDTO> addInventory(@RequestBody @Valid InventoryDTO inventoryDTO){
+        return inventoryService.save(inventoryDTO);
     }
 
-    @PutMapping("/{inventoryId}")
-    public ResponseEntity<Void> updateInventory(@PathVariable UUID inventoryId,
+    @ResponseStatus(HttpStatus.CREATED)
+    @PutMapping("/{id}")
+    public Mono<InventoryDTO> updateInventory(@PathVariable("id") String inventoryId,
                                 @RequestBody @Valid InventoryDTO inventoryDTO){
 
-        if(!inventoryService.updateInventory(inventoryId, inventoryDTO)){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }else{
-            return new ResponseEntity<>(HttpStatus.CREATED);
-        }
+        return inventoryService.updateInventory(inventoryId, inventoryDTO)
+                .switchIfEmpty(Mono.error(new Exception(inventoryId)));
+    }
+
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(Exception.class)
+    public Map<String, Object> handleNotFound(Exception ex){
+
+        Map<String, Object> errorBody = new HashMap<>();
+
+        errorBody.put("timestamp", LocalDateTime.now());
+        errorBody.put("error", "Inventory " + ex.getMessage() + " not found");
+
+        return errorBody;
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(Error.class)
+    public Map<String, Object> handleNotFoundForProduct(Exception ex){
+
+        Map<String, Object> errorBody = new HashMap<>();
+
+        errorBody.put("timestamp", LocalDateTime.now());
+        errorBody.put("error", "Inventory for product " + ex.getMessage() + " not found");
+
+        return errorBody;
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)

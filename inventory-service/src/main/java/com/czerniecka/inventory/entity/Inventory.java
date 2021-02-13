@@ -3,29 +3,25 @@ package com.czerniecka.inventory.entity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity
+@Document
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Inventory {
-    @Id
-    @GeneratedValue
-    @Type(type="org.hibernate.type.UUIDCharType")
-    private UUID id;
 
-    @Type(type="org.hibernate.type.UUIDCharType")
-    private UUID productId;
+    @Id
+    private String id = UUID.randomUUID().toString();
+
+    private String productId;
     private int quantity;
 
-    @UpdateTimestamp
+    @LastModifiedDate
     private LocalDateTime lastModified;
 }
