@@ -6,7 +6,6 @@ import com.czerniecka.product.vo.ProductSupplierResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -33,13 +32,12 @@ public class ProductController {
         return productService.findAll();
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/{id}")
-    public ResponseEntity<Mono<ProductDTO>> getProductById(@PathVariable("id") String productId) {
-        Mono<ProductDTO> product = productService.findProductById(productId);
+    public Mono<ProductDTO> getProductById(@PathVariable("id") String productId) {
 
-        HttpStatus status = product != null ? HttpStatus.OK : HttpStatus.NOT_FOUND;
-
-        return new ResponseEntity<>(product, status);
+        return productService.findProductById(productId)
+                .switchIfEmpty(Mono.error(new Exception(productId)));
     }
 
     @GetMapping("/category/{category}")
@@ -47,29 +45,40 @@ public class ProductController {
         return productService.findProductsWhereCategoryContains(category);
     }
 
-    @GetMapping("/supplier/{supplierId}")
-    public Flux<ProductDTO> getProductsBySupplier(@PathVariable String supplierId) {
+    @GetMapping("/supplier/{id}")
+    public Flux<ProductDTO> getProductsBySupplier(@PathVariable("id") String supplierId) {
         return productService.findProductsBySupplier(supplierId);
     }
 
-    @GetMapping("/{productId}/supplier")
-    public ResponseEntity<Mono<ProductSupplierResponse>> getProductWithSupplier(@PathVariable String productId) {
-        Mono<ProductSupplierResponse> productWithSupplier = productService.getProductWithSupplier(productId);
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/{id}/supplier")
+    public Mono<ProductSupplierResponse> getProductWithSupplier(@PathVariable("id") String productId) {
 
-        HttpStatus status = productWithSupplier != null ? HttpStatus.OK : HttpStatus.NOT_FOUND;
-
-        return new ResponseEntity<>(productWithSupplier, status);
+        return productService.getProductWithSupplier(productId)
+                .switchIfEmpty(Mono.error(new Exception(productId)));
+        
     }
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("")
-    public ResponseEntity<Mono<ProductDTO>> addProduct(@Valid @RequestBody ProductDTO productDTO) {
-        Mono<ProductDTO> saved = productService.save(productDTO);
-
-        HttpStatus status = saved != null ? HttpStatus.CREATED : HttpStatus.SERVICE_UNAVAILABLE;
-
-        return new ResponseEntity<>(saved, status);
+    public Mono<ProductDTO> addProduct(@Valid @RequestBody ProductDTO productDTO) {
+        
+        return productService.save(productDTO);
     }
 
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(Exception.class)
+    public Map<String, Object> handleNotFound(Exception e){
+
+        Map<String, Object> errorBody = new HashMap<>();
+
+        errorBody.put("timestamp", LocalDateTime.now());
+        errorBody.put("error", "Product " + e.getMessage() + " not found");
+
+        return errorBody;
+    }
+
+    //TODO: fix input validation & response
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Map<String, Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
