@@ -20,7 +20,7 @@ public class InventoryServiceClient {
     @CircuitBreaker(name="inventory-service", fallbackMethod = "fallback")
     public HttpStatus postInventory(Inventory inventory){
         
-        return restTemplate.postForEntity("http://inventory-service/inventory", inventory, Inventory.class).getStatusCode();
+        return restTemplate.postForEntity("http://inventory-service/inventories", inventory, Inventory.class).getStatusCode();
 
     }
     public HttpStatus fallback(Inventory inventory, Throwable throwable){
