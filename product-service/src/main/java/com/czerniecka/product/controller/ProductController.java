@@ -63,7 +63,8 @@ public class ProductController {
     @PostMapping("")
     public Mono<ProductDTO> addProduct(@Valid @RequestBody ProductDTO productDTO) {
         
-        return productService.save(productDTO);
+        return productService.save(productDTO)
+                .switchIfEmpty(Mono.error(new Error(productDTO.getName())));
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -74,6 +75,18 @@ public class ProductController {
 
         errorBody.put("timestamp", LocalDateTime.now());
         errorBody.put("error", "Product " + e.getMessage() + " not found");
+
+        return errorBody;
+    }
+
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ExceptionHandler(Error.class)
+    public Map<String, Object> handleNotCreated(Exception e){
+
+        Map<String, Object> errorBody = new HashMap<>();
+
+        errorBody.put("timestamp", LocalDateTime.now());
+        errorBody.put("error", "Product " + e.getMessage() + " not added");
 
         return errorBody;
     }
