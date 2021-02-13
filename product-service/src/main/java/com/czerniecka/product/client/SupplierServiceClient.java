@@ -4,24 +4,29 @@ import com.czerniecka.product.vo.Supplier;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
-import java.util.UUID;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
 public class SupplierServiceClient {
 
-    private final RestTemplate restTemplate;
+
+    private WebClient.Builder webClientBuilder;
 
     @Autowired
-    public SupplierServiceClient(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public SupplierServiceClient(WebClient.Builder webClientBuilder) {
+        this.webClientBuilder = webClientBuilder;
     }
 
     @CircuitBreaker(name="supplier-service", fallbackMethod = "fallback")
     public Supplier getSupplier(String supplierId){
-        return restTemplate.getForObject("http://supplier-service/suppliers/" + supplierId,
-                Supplier.class);
+
+        return webClientBuilder.build()
+                .get()
+                .uri("http://supplier-service/suppliers/" + supplierId)
+                .retrieve()
+                .bodyToMono(Supplier.class)
+                .block();
+
     }
 
     public Supplier fallback(String supplierId, Throwable throwable){

@@ -71,6 +71,7 @@ public class ProductController {
     @ExceptionHandler(Exception.class)
     public Map<String, Object> handleNotFound(Exception e){
 
+
         Map<String, Object> errorBody = new HashMap<>();
 
         errorBody.put("timestamp", LocalDateTime.now());

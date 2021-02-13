@@ -10,7 +10,6 @@ import com.czerniecka.product.vo.Inventory;
 import com.czerniecka.product.vo.ProductSupplierResponse;
 import com.czerniecka.product.vo.Supplier;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -61,8 +60,12 @@ public class ProductService {
         return allBySupplierId.map(productMapper::toProductDTO);
     }
 
-
-    /* If supplier-service is unavailable, returns Product with empty Supplier object*/
+    /**
+     * If supplier-service is not available method returns:
+     * Product with empty Supplier object
+     *
+     * If product is not found returns Mono.empty
+     * */
     public Mono<ProductSupplierResponse> getProductWithSupplier(String productId) {
         ProductSupplierResponse response = new ProductSupplierResponse();
         Mono<Product> product = productRepository.findById(productId);
@@ -80,21 +83,28 @@ public class ProductService {
         Product product = productMapper.toProduct(productDTO);
         Mono<Product> saved = productRepository.save(product);
 
-        /* Creates inventory - SET productId equal saved Product id and quantity equal 0 */
+        /**
+         *  On save new product - creates a new instance of Inventory for that product,
+         *  for which productId is set to Saved Product Id
+         *  and quantity is set to 0
+         *  */
         return saved.flatMap(p -> {
             Inventory inventory = new Inventory();
             inventory.setProductId(p.getId());
             inventory.setQuantity(0);
 
-            HttpStatus httpStatus = inventoryServiceClient.postInventory(inventory);
-            /* If unable to create new inventory -> Product will not be saved*/
-            if(httpStatus.equals(HttpStatus.SERVICE_UNAVAILABLE)){
+            Inventory i = inventoryServiceClient.postInventory(inventory);
+            /**
+             *  If new Inventory object has not been created postInventory(arg) will return empty object.
+             *  and save product to database operation will be reversed.
+            * */
+            if(i.getProductId() == null){
                 productRepository.delete(p);
                 return Mono.empty();
             }else{
                 return saved.map(productMapper::toProductDTO);
             }
-        }).or(Mono.empty());
+        });
     }
 
 }

@@ -9,6 +9,7 @@ import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @SpringBootApplication
 @EnableEurekaClient
@@ -26,8 +27,8 @@ public class ProductServiceApplication {
     }
 
     @Bean
-    public MongoClient mongoClient(){
-        return MongoClients.create();
+    public WebClient.Builder getWebClientBuilder(){
+        return WebClient.builder();
     }
 
 }
