@@ -41,20 +41,17 @@ public class CustomerService {
         return saved.map(customerMapper::toCustomerDTO);
     }
 
-    //TODO
-//    public boolean updateCustomer(UUID customerId, CustomerDTO customerDTO) {
-//
-//        Optional<Customer> c = customerRepository.findById(customerId);
-//
-//        if(c.isPresent()){
-//            Customer customer = c.get();
-//            customer.setName(customerDTO.getName());
-//            customer.setEmail(customerDTO.getEmail());
-//
-//            customerRepository.save(customer);
-//            return true;
-//        }else{
-//            return false;
-//        }
-//    }
+    public Mono<CustomerDTO> updateCustomer(String customerId, CustomerDTO customerDTO) {
+
+        return customerRepository.findById(customerId)
+                .switchIfEmpty(Mono.empty())
+                .flatMap(customer -> {
+                    customer.setName(customerDTO.getName());
+                    customer.setEmail(customerDTO.getEmail());
+                    Mono<Customer> save = customerRepository.save(customer);
+                    return save.map(customerMapper::toCustomerDTO);
+                        }
+                );
+
+    }
 }
