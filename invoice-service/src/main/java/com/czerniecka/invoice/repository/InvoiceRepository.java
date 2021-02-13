@@ -1,12 +1,12 @@
 package com.czerniecka.invoice.repository;
 
 import com.czerniecka.invoice.entity.Invoice;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
 @Repository
-public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
-    Invoice findInvoiceById(UUID invoiceId);
+public interface InvoiceRepository extends ReactiveCrudRepository<Invoice, String> {
+    
 }

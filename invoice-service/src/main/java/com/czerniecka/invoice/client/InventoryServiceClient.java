@@ -23,12 +23,12 @@ public class InventoryServiceClient {
 
 
     @CircuitBreaker(name = "inventory-service", fallbackMethod = "fallbackGet")
-    public Inventory getInventory(UUID productId){
+    public Inventory getInventory(String productId){
         return restTemplate.getForObject("http://inventory-service/inventories/product/" + productId
                 ,Inventory.class);
     }
 
-    public Inventory fallbackGet(UUID productId, Throwable throwable){
+    public Inventory fallbackGet(String productId, Throwable throwable){
         System.out.println("Service is currently busy. Please try again later.");
         
         return new Inventory();

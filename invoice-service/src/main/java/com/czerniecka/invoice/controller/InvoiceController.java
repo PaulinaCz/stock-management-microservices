@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
 import java.time.LocalDateTime;
@@ -27,25 +29,49 @@ public class InvoiceController {
     }
     
     @GetMapping("")
-    public ResponseEntity<List<InvoiceDTO>> getAllInvoices(){
-        List<InvoiceDTO> all = invoiceService.findAll();
-        return ResponseEntity.ok(all);
+    public Flux<InvoiceDTO> getAllInvoices(){
+        return invoiceService.findAll();
     }
 
-    @GetMapping("/{invoiceId}")
-    public ResponseEntity<InvoiceProductResponse> getInvoiceWithProduct(@PathVariable UUID invoiceId){
-        Optional<InvoiceProductResponse> withProduct = invoiceService.getInvoiceWithProduct(invoiceId);
-
-        return withProduct.map(invoiceProductResponse -> new ResponseEntity<>(invoiceProductResponse, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/{id}")
+    public Mono<InvoiceProductResponse> getInvoiceWithProduct(@PathVariable("id") String invoiceId){
+        
+        return invoiceService.getInvoiceWithProduct(invoiceId)
+                .switchIfEmpty(Mono.error(new Exception(invoiceId)));
+        
     }
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("")
-    public ResponseEntity<InvoiceDTO> addInvoice(@RequestBody @Valid InvoiceDTO invoiceDTO){
-        Optional<InvoiceDTO> saved = invoiceService.save(invoiceDTO);
-        return saved.map(invoice -> new ResponseEntity<>(invoice, HttpStatus.CREATED))
-                .orElseGet(() -> new ResponseEntity("Error while processing invoice, please try again later.",
-                        HttpStatus.SERVICE_UNAVAILABLE));
+    public Mono<InvoiceDTO> addInvoice(@RequestBody @Valid InvoiceDTO invoiceDTO){
+        
+        return invoiceService.save(invoiceDTO)
+                .switchIfEmpty(Mono.error(new Error(invoiceDTO.getProductId())));
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(Exception.class)
+    public Map<String, Object> handleNotFound(Exception e){
+
+        Map<String, Object> errorBody = new HashMap<>();
+
+        errorBody.put("timestamp", LocalDateTime.now());
+        errorBody.put("error", "Invoice " + e.getMessage() + " not found");
+
+        return errorBody;
+    }
+
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ExceptionHandler(Error.class)
+    public Map<String, Object> handleNotCreated(Exception e){
+
+        Map<String, Object> errorBody = new HashMap<>();
+
+        errorBody.put("timestamp", LocalDateTime.now());
+        errorBody.put("error", "Invoice for product " + e.getMessage() + " was not placed");
+
+        return errorBody;
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)

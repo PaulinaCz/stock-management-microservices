@@ -12,10 +12,9 @@ import com.czerniecka.invoice.vo.InvoiceProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class InvoiceService {
@@ -35,46 +34,48 @@ public class InvoiceService {
     }
 
 
-    public List<InvoiceDTO> findAll() {
+    public Flux<InvoiceDTO> findAll() {
 
-        List<Invoice> all = invoiceRepository.findAll();
-        return invoiceMapper.toInvoiceDTOs(all);
+        Flux<Invoice> all = invoiceRepository.findAll();
+        return all.map(invoiceMapper::toInvoiceDTO);
     }
-    
-    /* If product-service is unavailable, returns Invoice with empty Product object*/    
-    public Optional<InvoiceProductResponse> getInvoiceWithProduct(UUID invoiceId) {
+
+    /* If product-service is unavailable, returns Invoice with empty Product object*/
+    public Mono<InvoiceProductResponse> getInvoiceWithProduct(String invoiceId) {
         InvoiceProductResponse response = new InvoiceProductResponse();
 
-        Optional<Invoice> i = invoiceRepository.findById(invoiceId);
+        Mono<Invoice> invoice = invoiceRepository.findById(invoiceId);
 
-        if (i.isPresent()) {
-            Invoice invoice = i.get();
-            Product product = productServiceClient.getProduct(invoice.getProductId());
-            product.setId(invoice.getProductId());
-            response.setInvoice(invoiceMapper.toInvoiceDTO(invoice));
-            response.setProduct(product);
+        return invoice.flatMap(i -> {
+                    Product product = productServiceClient.getProduct(i.getProductId());
+                    product.setId(i.getProductId());
+                    response.setInvoice(invoiceMapper.toInvoiceDTO(i));
+                    response.setProduct(product);
+                    return Mono.just(response);
+                }
+        ).or(Mono.empty());
 
-            return Optional.of(response);
-        } else {
-            return Optional.empty();
-        }
     }
 
-    public Optional<InvoiceDTO> save(InvoiceDTO invoiceDTO) {
+    public Mono<InvoiceDTO> save(InvoiceDTO invoiceDTO) {
         Invoice invoice = invoiceMapper.toInvoice(invoiceDTO);
-        Invoice saved = invoiceRepository.save(invoice);
+        Mono<Invoice> saved = invoiceRepository.save(invoice);
          /*If inventory-service is not available, service client will invoke fallback method and
         will stop executing rest of POST order*/
-        Inventory inventory = inventoryServiceClient.getInventory(saved.getProductId());
         
-        /* Update inventory -> adds purchased items to stock */
-        inventory.setQuantity(inventory.getQuantity() + invoice.getAmount());
-        HttpStatus httpStatus = inventoryServiceClient.putInventory(inventory);
-        if (httpStatus.equals(HttpStatus.CREATED)) {
-            return Optional.of(invoiceMapper.toInvoiceDTO(saved));
-        } else {
-            invoiceRepository.delete(saved);
-            return Optional.empty();
-        }
+        return saved.flatMap(i -> {
+            Inventory inventory = inventoryServiceClient.getInventory(i.getProductId());
+            inventory.setQuantity(inventory.getQuantity() + invoice.getAmount());
+            HttpStatus httpStatus = inventoryServiceClient.putInventory(inventory);
+            
+            if (httpStatus.equals(HttpStatus.CREATED)) {
+                return saved.map(invoiceMapper::toInvoiceDTO);
+            } else {
+                invoiceRepository.delete(i);
+                return Mono.empty();
+            }
+        }).or(Mono.empty());
+        
+        
     }
 }
