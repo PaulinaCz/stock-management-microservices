@@ -2,15 +2,18 @@ package com.czerniecka.inventory.controller;
 
 import com.czerniecka.inventory.dto.InventoryDTO;
 import com.czerniecka.inventory.service.InventoryService;
-import com.czerniecka.inventory.vo.ResponseTemplateVO;
+import com.czerniecka.inventory.vo.InventoryProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import javax.validation.Valid;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/inventory")
@@ -29,16 +32,16 @@ public class InventoryController {
         return ResponseEntity.ok(all);
     }
 
-    @GetMapping("/withProducts")
-    public ResponseEntity<List<ResponseTemplateVO>> getAllWithProducts(){
-        List<ResponseTemplateVO> allWithProducts = inventoryService.findAllWithProducts();
+    @GetMapping("/products")
+    public ResponseEntity<List<InventoryProductResponse>> getAllWithProducts(){
+        List<InventoryProductResponse> allWithProducts = inventoryService.findAllWithProducts();
         return ResponseEntity.ok(allWithProducts);
     }
 
     @GetMapping("/{inventoryId}")
-    public ResponseEntity<ResponseTemplateVO> getInventoryById(@PathVariable UUID inventoryId){
-        Optional<ResponseTemplateVO> inventoryById = inventoryService.findInventoryById(inventoryId);
-        return inventoryById.map(responseTemplateVO -> new ResponseEntity<>(responseTemplateVO, HttpStatus.OK))
+    public ResponseEntity<InventoryProductResponse> getInventoryById(@PathVariable UUID inventoryId){
+        Optional<InventoryProductResponse> inventoryById = inventoryService.findInventoryById(inventoryId);
+        return inventoryById.map(inventoryProductResponse -> new ResponseEntity<>(inventoryProductResponse, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
@@ -50,20 +53,38 @@ public class InventoryController {
     }
 
     @PostMapping("")
-    public ResponseEntity<InventoryDTO> addInventory(@RequestBody InventoryDTO inventoryDTO){
+    public ResponseEntity<InventoryDTO> addInventory(@RequestBody @Valid InventoryDTO inventoryDTO){
         InventoryDTO saved = inventoryService.save(inventoryDTO);
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 
-    @PutMapping("/inventory/{inventoryId}")
+    @PutMapping("/{inventoryId}")
     public ResponseEntity<Void> updateInventory(@PathVariable UUID inventoryId,
-                                @RequestBody InventoryDTO inventoryDTO){
+                                @RequestBody @Valid InventoryDTO inventoryDTO){
 
         if(!inventoryService.updateInventory(inventoryId, inventoryDTO)){
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }else{
             return new ResponseEntity<>(HttpStatus.CREATED);
         }
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Map<String, Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+
+        Map<String, Object> errorBody = new HashMap<>();
+
+        errorBody.put("timestamp", LocalDateTime.now());
+
+        List<String> errors = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                .collect(Collectors.toList());
+
+        errorBody.put("validationErrors", errors);
+        return errorBody;
     }
 
 }

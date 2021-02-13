@@ -1,5 +1,7 @@
 package com.czerniecka.invoice.service;
 
+import com.czerniecka.invoice.client.InventoryServiceClient;
+import com.czerniecka.invoice.client.ProductServiceClient;
 import com.czerniecka.invoice.dto.InvoiceDTO;
 import com.czerniecka.invoice.dto.InvoiceMapper;
 import com.czerniecka.invoice.entity.Invoice;
@@ -8,64 +10,71 @@ import com.czerniecka.invoice.vo.Inventory;
 import com.czerniecka.invoice.vo.Product;
 import com.czerniecka.invoice.vo.InvoiceProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class InvoiceService {
-    
+
     private final InvoiceRepository invoiceRepository;
     private final InvoiceMapper invoiceMapper;
-    private RestTemplate restTemplate;
+    private final ProductServiceClient productServiceClient;
+    private final InventoryServiceClient inventoryServiceClient;
 
     @Autowired
-    public InvoiceService(InvoiceRepository invoiceRepository, InvoiceMapper invoiceMapper, RestTemplate restTemplate) {
+    public InvoiceService(InvoiceRepository invoiceRepository, InvoiceMapper invoiceMapper,
+                          ProductServiceClient productServiceClient, InventoryServiceClient inventoryServiceClient) {
         this.invoiceRepository = invoiceRepository;
         this.invoiceMapper = invoiceMapper;
-        this.restTemplate = restTemplate;
+        this.productServiceClient = productServiceClient;
+        this.inventoryServiceClient = inventoryServiceClient;
     }
+
 
     public List<InvoiceDTO> findAll() {
 
         List<Invoice> all = invoiceRepository.findAll();
         return invoiceMapper.toInvoiceDTOs(all);
     }
-
+    
+    /* If product-service is unavailable, returns Invoice with empty Product object*/    
     public Optional<InvoiceProductResponse> getInvoiceWithProduct(UUID invoiceId) {
-        InvoiceProductResponse vo = new InvoiceProductResponse();
-        
+        InvoiceProductResponse response = new InvoiceProductResponse();
+
         Optional<Invoice> i = invoiceRepository.findById(invoiceId);
 
-        if(i.isPresent()){
+        if (i.isPresent()) {
             Invoice invoice = i.get();
-            Product product = restTemplate.getForObject("http://product-service/products/" + invoice.getProductId(),
-                    Product.class);
-
+            Product product = productServiceClient.getProduct(invoice.getProductId());
             product.setId(invoice.getProductId());
-            vo.setInvoice(invoiceMapper.toInvoiceDTO(invoice));
-            vo.setProduct(product);
+            response.setInvoice(invoiceMapper.toInvoiceDTO(invoice));
+            response.setProduct(product);
 
-            return Optional.of(vo);
-        }else{
+            return Optional.of(response);
+        } else {
             return Optional.empty();
         }
     }
 
-    public InvoiceDTO save(InvoiceDTO invoiceDTO) {
+    public Optional<InvoiceDTO> save(InvoiceDTO invoiceDTO) {
         Invoice invoice = invoiceMapper.toInvoice(invoiceDTO);
-
-        //update inventory -> adds purchased items to stock
-        Inventory inventory = restTemplate.getForObject("http://inventory-service/inventory/product/" + invoice.getProductId()
-                                                        ,Inventory.class);
-        inventory.setQuantity(inventory.getQuantity() + invoice.getAmount());
-        restTemplate.put("http://inventory-service/inventory/inventory/" + inventory.getId(), inventory, Inventory.class);
         Invoice saved = invoiceRepository.save(invoice);
-
-        return invoiceMapper.toInvoiceDTO(saved);
+         /*If inventory-service is not available, service client will invoke fallback method and
+        will stop executing rest of POST order*/
+        Inventory inventory = inventoryServiceClient.getInventory(saved.getProductId());
+        
+        /* Update inventory -> adds purchased items to stock */
+        inventory.setQuantity(inventory.getQuantity() + invoice.getAmount());
+        HttpStatus httpStatus = inventoryServiceClient.putInventory(inventory);
+        if (httpStatus.equals(HttpStatus.CREATED)) {
+            return Optional.of(invoiceMapper.toInvoiceDTO(saved));
+        } else {
+            invoiceRepository.delete(saved);
+            return Optional.empty();
+        }
     }
 }

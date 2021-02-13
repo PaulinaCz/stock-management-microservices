@@ -1,18 +1,18 @@
 package com.czerniecka.product.service;
 
+import com.czerniecka.product.client.InventoryServiceClient;
+import com.czerniecka.product.client.SupplierServiceClient;
 import com.czerniecka.product.dto.ProductDTO;
 import com.czerniecka.product.dto.ProductMapper;
 import com.czerniecka.product.entity.Product;
 import com.czerniecka.product.repository.ProductRepository;
 import com.czerniecka.product.vo.Inventory;
-import com.czerniecka.product.vo.InventoryRequest;
-import com.czerniecka.product.vo.ResponseTemplateVO;
+import com.czerniecka.product.vo.ProductSupplierResponse;
 import com.czerniecka.product.vo.Supplier;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,13 +22,16 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
-    private RestTemplate restTemplate;
+    private final SupplierServiceClient supplierServiceClient;
+    private final InventoryServiceClient inventoryServiceClient;
 
     @Autowired
-    public ProductService(ProductRepository productRepository, ProductMapper productMapper, RestTemplate restTemplate) {
+    public ProductService(ProductRepository productRepository, ProductMapper productMapper,
+                          SupplierServiceClient supplierServiceClient, InventoryServiceClient inventoryServiceClient) {
         this.productRepository = productRepository;
         this.productMapper = productMapper;
-        this.restTemplate = restTemplate;
+        this.supplierServiceClient = supplierServiceClient;
+        this.inventoryServiceClient = inventoryServiceClient;
     }
 
     public List<ProductDTO> findAll() {
@@ -44,9 +47,9 @@ public class ProductService {
 
     }
 
-    public List<ProductDTO> findProductsByCategory(String category) {
+    public List<ProductDTO> findProductsWhereCategoryContains(String category) {
 
-        List<Product> allByCategory = productRepository.findAllByCategory(category);
+        List<Product> allByCategory = productRepository.findProductByCategoryContaining(category);
         return productMapper.toProductsDTOs(allByCategory);
     }
 
@@ -56,52 +59,40 @@ public class ProductService {
         return productMapper.toProductsDTOs(allBySupplierId);
     }
 
-    public Optional<ResponseTemplateVO> getProductWithSupplier(UUID productId) {
-        ResponseTemplateVO vo = new ResponseTemplateVO();
-        Optional<Product> product = productRepository.findById(productId);
 
+    /* If supplier-service is unavailable, returns Product with empty Supplier object*/
+    public Optional<ProductSupplierResponse> getProductWithSupplier(UUID productId) {
+        ProductSupplierResponse response = new ProductSupplierResponse();
+        Optional<Product> product = productRepository.findById(productId);
         if (product.isPresent()) {
-            Supplier supplier = restTemplate.getForObject("http://supplier-service/suppliers/" + product.get().getSupplierId(),
-                    Supplier.class);
-            vo.setProduct(productMapper.toProductDTO(product.get()));
-            vo.setSupplier(supplier);
-            return Optional.of(vo);
+            Supplier supplier = supplierServiceClient.getSupplier(product.get().getSupplierId());
+            response.setProduct(productMapper.toProductDTO(product.get()));
+            response.setSupplier(supplier);
+            return Optional.of(response);
         } else {
             return Optional.empty();
         }
     }
 
-    public ProductDTO save(InventoryRequest request) {
-        Product product = productMapper.toProduct(request.getProduct());
+    public Optional<ProductDTO> save(ProductDTO productDTO) {
+
+        Product product = productMapper.toProduct(productDTO);
         Product saved = productRepository.save(product);
 
-        Inventory inventory = request.getInventory();
+        /* Creates inventory - SET productId equal saved Product id and quantity equal 0 */
+        Inventory inventory = new Inventory();
         inventory.setProductId(saved.getId());
         inventory.setQuantity(0);
-        restTemplate.postForObject("http://inventory-service/inventory", inventory, Inventory.class);
+        HttpStatus httpStatus = inventoryServiceClient.postInventory(inventory);
 
-        return productMapper.toProductDTO(saved);
+        /* If unable to create new inventory -> Product will not be saved*/
+        if(httpStatus.equals(HttpStatus.SERVICE_UNAVAILABLE)){
+            productRepository.delete(product);
+            return Optional.empty();
+        }else{
+            return Optional.of(productMapper.toProductDTO(saved));
+        }
+
     }
-
-//    public boolean updateProduct(UUID productId, ProductDTO productDTO) {
-//
-//        Optional<Product> p = productRepository.findById(productId);
-//
-//        if (p.isPresent()) {
-//            Product product = p.get();
-//            product.setName(productDTO.getName());
-//            product.setBuyingPrice(productDTO.getBuyingPrice());
-//            product.setSellingPrice(productDTO.getSellingPrice());
-//            product.setSupplierId(productDTO.getSupplierId());
-//            product.setLastModified(LocalDateTime.now());
-//            product.setCategory(productDTO.getCategory());
-//            productRepository.save(product);
-//
-//            return true;
-//        } else {
-//            return false;
-//        }
-//
-//    }
 
 }

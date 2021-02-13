@@ -1,4 +1,4 @@
-package com.czerniecka.inventory;
+package com.czerniecka.inventory.repository;
 
 import com.czerniecka.inventory.entity.Inventory;
 import org.springframework.data.jpa.repository.JpaRepository;

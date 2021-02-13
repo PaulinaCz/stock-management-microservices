@@ -1,14 +1,14 @@
 package com.czerniecka.inventory.service;
 
-import com.czerniecka.inventory.InventoryRepository;
+import com.czerniecka.inventory.client.ProductServiceClient;
+import com.czerniecka.inventory.repository.InventoryRepository;
 import com.czerniecka.inventory.dto.InventoryDTO;
 import com.czerniecka.inventory.dto.InventoryMapper;
 import com.czerniecka.inventory.entity.Inventory;
 import com.czerniecka.inventory.vo.Product;
-import com.czerniecka.inventory.vo.ResponseTemplateVO;
+import com.czerniecka.inventory.vo.InventoryProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -21,13 +21,13 @@ public class InventoryService {
 
     private final InventoryRepository inventoryRepository;
     private final InventoryMapper inventoryMapper;
-    private RestTemplate restTemplate;
+    private final ProductServiceClient productServiceClient;
 
     @Autowired
-    public InventoryService(InventoryRepository inventoryRepository, InventoryMapper inventoryMapper, RestTemplate restTemplate) {
+    public InventoryService(InventoryRepository inventoryRepository, InventoryMapper inventoryMapper, ProductServiceClient productServiceClient) {
         this.inventoryRepository = inventoryRepository;
         this.inventoryMapper = inventoryMapper;
-        this.restTemplate = restTemplate;
+        this.productServiceClient = productServiceClient;
     }
 
     public List<InventoryDTO> findAll() {
@@ -36,15 +36,15 @@ public class InventoryService {
         return inventoryMapper.toInventoryDTOs(all);
     }
 
-    public List<ResponseTemplateVO> findAllWithProducts() {
+    /* When product-service unavailable, returns List of Inventories with empty Product objects */
+    public List<InventoryProductResponse> findAllWithProducts() {
         List<Inventory> inventories = inventoryRepository.findAll();
-        List<ResponseTemplateVO> result = new ArrayList<>();
+        List<InventoryProductResponse> result = new ArrayList<>();
 
-        for(Inventory i : inventories){
-            Product product = restTemplate.getForObject("http://product-service/products/" + i.getProductId(),
-                                                        Product.class);
+        for (Inventory i : inventories) {
+            Product product = productServiceClient.getProduct(i.getProductId());
             product.setId(i.getProductId());
-            ResponseTemplateVO vo = new ResponseTemplateVO();
+            InventoryProductResponse vo = new InventoryProductResponse();
             vo.setInventory(inventoryMapper.toInventoryDTO(i));
             vo.setProduct(product);
             result.add(vo);
@@ -52,19 +52,19 @@ public class InventoryService {
         return result;
     }
 
-    public Optional<ResponseTemplateVO> findInventoryById(UUID inventoryId) {
+    /* When product-service unavailable, returns Inventory with empty Product object */
+    public Optional<InventoryProductResponse> findInventoryById(UUID inventoryId) {
         Optional<Inventory> i = inventoryRepository.findById(inventoryId);
-        ResponseTemplateVO vo = new ResponseTemplateVO();
+        InventoryProductResponse response = new InventoryProductResponse();
 
-        if(i.isPresent()){
+        if (i.isPresent()) {
             Inventory inventory = i.get();
-            Product product = restTemplate.getForObject("http://product-service/products/" + inventory.getProductId(),
-                    Product.class);
+            Product product = productServiceClient.getProduct(inventory.getProductId());
             product.setId(inventory.getProductId());
-            vo.setInventory(inventoryMapper.toInventoryDTO(inventory));
-            vo.setProduct(product);
-            return Optional.of(vo);
-        }else{
+            response.setInventory(inventoryMapper.toInventoryDTO(inventory));
+            response.setProduct(product);
+            return Optional.of(response);
+        } else {
             return Optional.empty();
         }
     }
