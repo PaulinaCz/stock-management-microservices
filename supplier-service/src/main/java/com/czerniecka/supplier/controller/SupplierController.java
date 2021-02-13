@@ -61,7 +61,7 @@ public class SupplierController {
         Map<String, Object> errorBody = new HashMap<>();
 
         errorBody.put("timestamp", LocalDateTime.now());
-        errorBody.put("error", "Customer " + ex.getMessage() + " not found");
+        errorBody.put("error", "Supplier " + ex.getMessage() + " not found");
 
         return errorBody;
     }
