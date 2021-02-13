@@ -5,7 +5,6 @@ import com.czerniecka.customer.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -32,36 +31,45 @@ public class CustomerController {
         return customerService.findAll();
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/{id}")
-    public ResponseEntity<Mono<CustomerDTO>> getCustomerById(@PathVariable("id") String customerId){
-        Mono<CustomerDTO> customer = customerService.findCustomerById(customerId);
+    public Mono<CustomerDTO> getCustomerById(@PathVariable("id") String customerId){
 
-        HttpStatus status = customer != null ? HttpStatus.OK : HttpStatus.NOT_FOUND;
+        return customerService.findCustomerById(customerId)
+                .switchIfEmpty(Mono.error(new Exception(customerId)));
 
-        return new ResponseEntity<>(customer, status);
     }
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("")
-    public ResponseEntity<Mono<CustomerDTO>> addCustomer(@RequestBody @Valid CustomerDTO customerDTO){
-        Mono<CustomerDTO> saved = customerService.save(customerDTO);
-
-        HttpStatus status = saved != null ? HttpStatus.CREATED : HttpStatus.BAD_REQUEST;
-
-        return new ResponseEntity<>(saved, status);
+    public Mono<CustomerDTO>addCustomer(@RequestBody @Valid CustomerDTO customerDTO){
+        return customerService.save(customerDTO);
     }
 
-    //TODO
-//    @PutMapping("/{customerId}")
-//    public ResponseEntity<Void> updateCustomer(@PathVariable UUID customerId,
-//                               @RequestBody @Valid CustomerDTO customerDTO){
-//
-//        if(!customerService.updateCustomer(customerId, customerDTO)){
-//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-//        }else{
-//            return new ResponseEntity<>(HttpStatus.CREATED);
-//        }
-//    }
 
+    @ResponseStatus(HttpStatus.CREATED)
+    @PutMapping("/{id}")
+    public Mono<CustomerDTO> updateCustomer(@PathVariable("id") String customerId,
+                               @RequestBody @Valid CustomerDTO customerDTO){
+
+        return customerService.updateCustomer(customerId, customerDTO)
+                .switchIfEmpty(Mono.error(new Exception(customerId)));
+
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(Exception.class)
+    public Map<String, Object> handleNotFound(Exception ex){
+
+        Map<String, Object> errorBody = new HashMap<>();
+
+        errorBody.put("timestamp", LocalDateTime.now());
+        errorBody.put("error", "Customer " + ex.getMessage() + " not found");
+
+        return errorBody;
+    }
+
+    //TODO: fix input validation & response
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Map<String, Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
