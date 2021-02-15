@@ -15,8 +15,6 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class InventoryService {
@@ -38,7 +36,10 @@ public class InventoryService {
         return all.map(inventoryMapper::toInventoryDTO);
     }
 
-    /* When product-service unavailable, returns List of Inventories with empty Product objects */
+    /**
+     *  When product-service is not available method returns 
+     *  List of Inventories where each has empty Product object
+     */
     public Flux<List<InventoryProductResponse>> findAllWithProducts() {
         Flux<Inventory> inventories = inventoryRepository.findAll();
         List<InventoryProductResponse> result = new ArrayList<>();
@@ -58,7 +59,12 @@ public class InventoryService {
         return Flux.just(result);
     }
 
-    /* When product-service unavailable, returns Inventory with empty Product object */
+    /**
+     *  When product-service is not available method returns:
+     *  Inventory with empty Product object 
+     *  
+     *  If inventory is not found returns Mono.empty
+     */
     public Mono<InventoryProductResponse> findInventoryById(String inventoryId) {
         Mono<Inventory> byId = inventoryRepository.findById(inventoryId);
         return byId.switchIfEmpty(Mono.empty())

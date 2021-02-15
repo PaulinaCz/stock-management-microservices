@@ -49,14 +49,15 @@ public class InventoryController {
     @GetMapping("/product/{id}")
     public Mono<InventoryDTO> getInventoryByProductId(@PathVariable("id") String productId){
         return inventoryService.findInventoryByProductId(productId)
-                .switchIfEmpty(Mono.error(new Error(productId)));
+                .switchIfEmpty(Mono.error(new Exception("for product " + productId)));
 
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("")
     public Mono<InventoryDTO> addInventory(@RequestBody @Valid InventoryDTO inventoryDTO){
-        return inventoryService.save(inventoryDTO);
+        return inventoryService.save(inventoryDTO)
+                .switchIfEmpty(Mono.error(new Error(inventoryDTO.getId())));
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -81,14 +82,14 @@ public class InventoryController {
         return errorBody;
     }
 
-    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(Error.class)
     public Map<String, Object> handleNotFoundForProduct(Exception ex){
 
         Map<String, Object> errorBody = new HashMap<>();
 
         errorBody.put("timestamp", LocalDateTime.now());
-        errorBody.put("error", "Inventory for product " + ex.getMessage() + " not found");
+        errorBody.put("error", "Inventory " + ex.getMessage() + " not saved");
 
         return errorBody;
     }
