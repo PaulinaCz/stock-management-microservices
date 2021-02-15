@@ -14,12 +14,10 @@ import reactor.core.publisher.Mono;
 public class InventoryServiceClient {
 
     private WebClient.Builder webClientBuilder;
-    private final RestTemplate restTemplate;
 
     @Autowired
-    public InventoryServiceClient(WebClient.Builder webClientBuilder, RestTemplate restTemplate) {
+    public InventoryServiceClient(WebClient.Builder webClientBuilder) {
         this.webClientBuilder = webClientBuilder;
-        this.restTemplate = restTemplate;
     }
     
     @CircuitBreaker(name = "inventory-service", fallbackMethod = "fallbackGet")
