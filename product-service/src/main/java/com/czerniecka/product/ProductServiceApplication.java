@@ -16,11 +16,10 @@ public class ProductServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(ProductServiceApplication.class, args);
     }
-
-    //@LoadBalanced - or should be separate?
+    
     @Bean
+    @LoadBalanced
     public WebClient.Builder getWebClientBuilder(){
         return WebClient.builder();
     }
-
 }
