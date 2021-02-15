@@ -50,14 +50,14 @@ public class InvoiceService {
 
         Mono<Invoice> invoice = invoiceRepository.findById(invoiceId);
 
-        return invoice.flatMap(i -> {
+        return invoice.switchIfEmpty(Mono.empty())
+                .flatMap(i -> {
                     Product product = productServiceClient.getProduct(i.getProductId());
                     product.setId(i.getProductId());
                     response.setInvoice(invoiceMapper.toInvoiceDTO(i));
                     response.setProduct(product);
                     return Mono.just(response);
-                }
-        ).or(Mono.empty());
+                });
 
     }
 
