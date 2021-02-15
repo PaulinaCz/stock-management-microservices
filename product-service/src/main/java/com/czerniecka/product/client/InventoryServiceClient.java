@@ -26,7 +26,6 @@ public class InventoryServiceClient {
         return webClientBuilder.build()
                 .post()
                 .uri("http://inventory-service/inventories")
-                .header(MediaType.APPLICATION_JSON_VALUE)
                 .body(Mono.just(inventory), Inventory.class)
                 .retrieve()
                 .onStatus(HttpStatus.BAD_REQUEST::equals,
