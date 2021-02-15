@@ -53,9 +53,7 @@ public class InventoryService {
                     vo.setProduct(product);
                     result.add(vo);
                     return result;
-                }
-        );
-        
+                });
         return Flux.just(result);
     }
 
@@ -99,9 +97,7 @@ public class InventoryService {
                             inventory.setLastModified(LocalDateTime.now());
                             Mono<Inventory> updated = inventoryRepository.save(inventory);
                             return updated.map(inventoryMapper::toInventoryDTO);
-                        }
-                );
-        
+                        });
     }
 
 
