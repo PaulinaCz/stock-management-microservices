@@ -46,16 +46,15 @@ public class OrderService {
     public Mono<OrderProductResponse> getOrderWithProduct(String orderId) {
         OrderProductResponse response = new OrderProductResponse();
         Mono<Order> order = orderRepository.findById(orderId);
-        return order.flatMap(
+        return order.switchIfEmpty(Mono.empty())
+                .flatMap(
                 o -> {
                     Product product = productServiceClient.getProduct(o.getProductId());
                     product.setId(o.getProductId());
                     response.setOrder(orderMapper.toOrderDTO(o));
                     response.setProduct(product);
                     return Mono.just(response);
-                }
-        ).or(Mono.empty());
-
+                });
     }
     /**
      * If inventory-service is not available while calling on GET method - fallback method will return empty Inventory object.
