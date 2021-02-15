@@ -69,13 +69,13 @@ public class ProductService {
     public Mono<ProductSupplierResponse> getProductWithSupplier(String productId) {
         ProductSupplierResponse response = new ProductSupplierResponse();
         Mono<Product> product = productRepository.findById(productId);
-        return product.flatMap(p -> {
+        return product.switchIfEmpty(Mono.empty())
+                .flatMap(p -> {
             Supplier supplier = supplierServiceClient.getSupplier(p.getSupplierId());
             response.setProduct(productMapper.toProductDTO(p));
             response.setSupplier(supplier);
             return Mono.just(response);
-        })
-                .or(Mono.empty());
+        });
     }
 
     public Mono<ProductDTO> save(ProductDTO productDTO) {
