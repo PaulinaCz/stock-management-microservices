@@ -23,7 +23,7 @@ spring:
         - id: inventory-service
           uri: lb://inventory-service
           predicates:
-            - Path=/inventory/**
+            - Path=/inventories/**
         - id: invoice-service
           uri: lb://invoice-service
           predicates:
