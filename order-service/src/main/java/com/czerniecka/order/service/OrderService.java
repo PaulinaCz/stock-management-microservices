@@ -5,15 +5,12 @@ import com.czerniecka.order.client.ProductServiceClient;
 import com.czerniecka.order.dto.OrderDTO;
 import com.czerniecka.order.dto.OrderMapper;
 import com.czerniecka.order.entity.Order;
-import com.czerniecka.order.exception.CustomException;
 import com.czerniecka.order.repository.OrderRepository;
 import com.czerniecka.order.vo.Inventory;
 import com.czerniecka.order.vo.Product;
 import com.czerniecka.order.vo.OrderProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -40,11 +37,15 @@ public class OrderService {
         return all.map(orderMapper::toOrderDTO);
     }
 
-    /* If product-service is unavailable, returns Order with empty Product object*/
+    /**
+     *  If product-service is not available method returns:
+     *  Order with empty Product object
+     *  
+     *  If order is not found returns Mono.empty
+     */
     public Mono<OrderProductResponse> getOrderWithProduct(String orderId) {
         OrderProductResponse response = new OrderProductResponse();
         Mono<Order> order = orderRepository.findById(orderId);
-        
         return order.flatMap(
                 o -> {
                     Product product = productServiceClient.getProduct(o.getProductId());
@@ -56,21 +57,19 @@ public class OrderService {
         ).or(Mono.empty());
 
     }
-
-
-    public Inventory getInventory(String productId) {
-        return inventoryServiceClient.getInventory(productId);
-    }
-
-    /*
-    If inventory-service is not available while calling on GET method - fallback method will return empty Inventory object.
-    If save method receives empty Invoice object, it reverses save order to database.
-
-    If inventory-service is not available while calling on PUT method it will invoke fallback method.
-    If save method receives response HttpStatus.CREATED from inventory-service, it returns saved order.
-    If save method receives response on failure to connect to/save to inventory-service, it reverses save order to database.
+    /**
+     * If inventory-service is not available while calling on GET method - fallback method will return empty Inventory object.
+     * If save method receives empty Invoice object, it reverses save order to database.
+     *
+     * If number of available items in inventory is larger than the order amount -> proceed to update inventory WHERE:
+     * If inventory-service is not available while calling on PUT method 
+     * it will invoke fallback method and return empty Inventory object and reverse save order.
+     * If PUT method on inventory-service is successful - both database changes are committed.
+     * 
+     * If number of available items in inventory is less than the order amount -> 
+     * does not proceed to update inventory & reverse save order to database.
     */
-    @Transactional(rollbackFor = CustomException.class)
+
     public Mono<OrderDTO> save(OrderDTO orderDTO) {
 
         Order order = orderMapper.toOrder(orderDTO);
@@ -78,17 +77,24 @@ public class OrderService {
         
         return saved.flatMap(
                 o -> {
-                    Inventory inventory = getInventory(o.getProductId());
-                  
-                    inventory.setQuantity(inventory.getQuantity() - o.getAmount());
-                    HttpStatus status = inventoryServiceClient.putInventory(inventory);
-                    if(status.equals(HttpStatus.CREATED)){
-                        return Mono.just(orderMapper.toOrderDTO(o));
+                    Inventory inventory = inventoryServiceClient.getInventory(o.getProductId());
+                    if(inventory.getId() == null){
+                        orderRepository.delete(o);
+                        return Mono.empty();
+                    }else if(inventory.getQuantity() > o.getAmount()){
+                        inventory.setQuantity(inventory.getQuantity() - o.getAmount());
+                        Inventory i = inventoryServiceClient.putInventory(inventory);
+                        if(i.getId() == null){
+                            orderRepository.delete(o);
+                            return Mono.empty();
+                        }else{
+                            return Mono.just(orderMapper.toOrderDTO(o));
+                        }
                     }else{
+                        orderRepository.delete(o);
                         return Mono.empty();
                     }
-                }
-        ).or(Mono.empty());
+                });
         
     }
 //

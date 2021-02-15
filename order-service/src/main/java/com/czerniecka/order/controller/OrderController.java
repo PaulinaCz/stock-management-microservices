@@ -6,14 +6,12 @@ import com.czerniecka.order.vo.OrderProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -48,7 +46,8 @@ public class OrderController {
     @PostMapping("")
     public Mono<OrderDTO> addOrder(@Valid @RequestBody OrderDTO orderDTO){
         
-        return orderService.save(orderDTO);
+        return orderService.save(orderDTO)
+                .switchIfEmpty(Mono.error(new Error(orderDTO.getProductId())));
     }
 //
 //    @PatchMapping("/{orderId}")
@@ -65,6 +64,18 @@ public class OrderController {
 
         errorBody.put("timestamp", LocalDateTime.now());
         errorBody.put("error", "Order " + e.getMessage() + " not found");
+
+        return errorBody;
+    }
+
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ExceptionHandler(Error.class)
+    public Map<String, Object> handleNotCreated(Exception e){
+
+        Map<String, Object> errorBody = new HashMap<>();
+
+        errorBody.put("timestamp", LocalDateTime.now());
+        errorBody.put("error", "Order of product " + e.getMessage() + " not added");
 
         return errorBody;
     }
