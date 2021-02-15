@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Document
+@Document(collection = "inventories")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
