@@ -10,7 +10,6 @@ import com.czerniecka.invoice.vo.Inventory;
 import com.czerniecka.invoice.vo.Product;
 import com.czerniecka.invoice.vo.InvoiceProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -40,7 +39,12 @@ public class InvoiceService {
         return all.map(invoiceMapper::toInvoiceDTO);
     }
 
-    /* If product-service is unavailable, returns Invoice with empty Product object*/
+    /**
+     *  If product-service is not available method returns:
+     *  Invoice with empty Product object
+     *
+     *  If invoice is not found returns Mono.empty
+     */
     public Mono<InvoiceProductResponse> getInvoiceWithProduct(String invoiceId) {
         InvoiceProductResponse response = new InvoiceProductResponse();
 
@@ -57,25 +61,31 @@ public class InvoiceService {
 
     }
 
+    /**
+     * If inventory-service is not available while calling on GET/PUT method - fallback method will return empty Inventory object.
+     * If save method receives empty Invoice object, it reverses save invoice to database.
+     *
+     * If PUT method on inventory-service is successful - both database changes are committed.
+     */
     public Mono<InvoiceDTO> save(InvoiceDTO invoiceDTO) {
         Invoice invoice = invoiceMapper.toInvoice(invoiceDTO);
         Mono<Invoice> saved = invoiceRepository.save(invoice);
-         /*If inventory-service is not available, service client will invoke fallback method and
-        will stop executing rest of POST order*/
-        
+
         return saved.flatMap(i -> {
             Inventory inventory = inventoryServiceClient.getInventory(i.getProductId());
-            inventory.setQuantity(inventory.getQuantity() + invoice.getAmount());
-            HttpStatus httpStatus = inventoryServiceClient.putInventory(inventory);
-            
-            if (httpStatus.equals(HttpStatus.CREATED)) {
-                return saved.map(invoiceMapper::toInvoiceDTO);
-            } else {
+            if(inventory.getId() == null){
                 invoiceRepository.delete(i);
                 return Mono.empty();
+            }else{
+                inventory.setQuantity(inventory.getQuantity() + i.getAmount());
+                Inventory inventoryUpdated = inventoryServiceClient.putInventory(inventory);
+                if(inventoryUpdated.getId() == null){
+                    invoiceRepository.delete(i);
+                    return Mono.empty();
+                }else{
+                    return Mono.just(invoiceMapper.toInvoiceDTO(i));
+                }
             }
-        }).or(Mono.empty());
-        
-        
+        });
     }
 }

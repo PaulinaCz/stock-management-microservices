@@ -9,6 +9,5 @@ import java.util.List;
 public interface InvoiceMapper {
 
     InvoiceDTO toInvoiceDTO(Invoice invoice);
-    List<InvoiceDTO> toInvoiceDTOs(List<Invoice> invoices);
     Invoice toInvoice(InvoiceDTO invoiceDTO);
 }
