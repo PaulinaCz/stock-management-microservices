@@ -63,48 +63,33 @@ public class ProductService {
     /**
      * If supplier-service is not available method returns:
      * Product with empty Supplier object
-     *
+     * <p>
      * If product is not found returns Mono.empty
-     * */
+     */
     public Mono<ProductSupplierResponse> getProductWithSupplier(String productId) {
         ProductSupplierResponse response = new ProductSupplierResponse();
         Mono<Product> product = productRepository.findById(productId);
         return product.switchIfEmpty(Mono.empty())
                 .flatMap(p -> {
-            Supplier supplier = supplierServiceClient.getSupplier(p.getSupplierId());
-            response.setProduct(productMapper.toProductDTO(p));
-            response.setSupplier(supplier);
-            return Mono.just(response);
-        });
+                    Supplier supplier = supplierServiceClient.getSupplier(p.getSupplierId());
+                    response.setProduct(productMapper.toProductDTO(p));
+                    response.setSupplier(supplier);
+                    return Mono.just(response);
+                });
     }
 
-    public Mono<ProductDTO> save(ProductDTO productDTO) {
+    public Mono<Product> save(ProductDTO productDTO) {
 
         Product product = productMapper.toProduct(productDTO);
-        Mono<Product> saved = productRepository.save(product);
 
-        /**
-         *  On save new product - creates a new instance of Inventory for that product,
-         *  for which productId is set to Saved Product Id
-         *  and quantity is set to 0
-         *  */
-        return saved.flatMap(p -> {
-            Inventory inventory = new Inventory();
-            inventory.setProductId(p.getId());
-            inventory.setQuantity(0);
+        Inventory inventory = new Inventory();
+        inventory.setProductId(product.getId());
+        inventory.setQuantity(0);
 
-            Inventory i = inventoryServiceClient.postInventory(inventory);
-            /**
-             *  If new Inventory object has not been created postInventory(arg) will return empty object.
-             *  and save product to database operation will be reversed.
-            * */
-            if(i.getProductId() == null){
-                productRepository.delete(p);
-                return Mono.empty();
-            }else{
-                return saved.map(productMapper::toProductDTO);
-            }
-        });
+            Mono<Inventory> inventoryMono = inventoryServiceClient.postInventory(inventory);
+
+            return inventoryMono.switchIfEmpty(Mono.empty())
+                    .flatMap(i -> productRepository.save(product));
+
     }
-
 }

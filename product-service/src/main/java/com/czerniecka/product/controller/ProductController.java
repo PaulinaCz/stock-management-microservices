@@ -1,6 +1,7 @@
 package com.czerniecka.product.controller;
 
 import com.czerniecka.product.dto.ProductDTO;
+import com.czerniecka.product.entity.Product;
 import com.czerniecka.product.service.ProductService;
 import com.czerniecka.product.vo.ProductSupplierResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +62,7 @@ public class ProductController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("")
-    public Mono<ProductDTO> addProduct(@Valid @RequestBody ProductDTO productDTO) {
+    public Mono<Product> addProduct(@Valid @RequestBody ProductDTO productDTO) {
         
         return productService.save(productDTO)
                 .switchIfEmpty(Mono.error(new Error(productDTO.getName())));
