@@ -3,7 +3,6 @@ package com.czerniecka.product.client;
 import com.czerniecka.product.vo.Inventory;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -27,8 +26,6 @@ public class InventoryServiceClient {
                 .uri("http://inventory-service/inventories")
                 .body(Mono.just(inventory), Inventory.class)
                 .retrieve()
-                .onStatus(HttpStatus.BAD_REQUEST::equals,
-                        clientResponse -> Mono.empty())
                 .bodyToMono(Inventory.class);
 
     }

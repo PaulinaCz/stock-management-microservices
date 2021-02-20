@@ -1,7 +1,6 @@
 package com.czerniecka.product.controller;
 
 import com.czerniecka.product.dto.ProductDTO;
-import com.czerniecka.product.entity.Product;
 import com.czerniecka.product.service.ProductService;
 import com.czerniecka.product.vo.ProductSupplierResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +64,7 @@ public class ProductController {
     public Mono<ProductDTO> addProduct(@Valid @RequestBody ProductDTO productDTO) {
         
         return productService.save(productDTO)
-                .switchIfEmpty(Mono.error(new Error()));
+                .switchIfEmpty(Mono.error(new ProductNotAdded()));
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -82,7 +81,7 @@ public class ProductController {
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)
-    @ExceptionHandler(Error.class)
+    @ExceptionHandler(ProductNotAdded.class)
     public Map<String, Object> handleNotCreated(Exception e){
 
         Map<String, Object> errorBody = new HashMap<>();
