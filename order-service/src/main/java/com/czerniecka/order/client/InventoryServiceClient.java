@@ -1,11 +1,10 @@
 package com.czerniecka.order.client;
 
+import com.czerniecka.order.dto.OrderDTO;
 import com.czerniecka.order.vo.Inventory;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
@@ -19,41 +18,32 @@ public class InventoryServiceClient {
     public InventoryServiceClient(WebClient.Builder webClientBuilder) {
         this.webClientBuilder = webClientBuilder;
     }
-    
-    @CircuitBreaker(name = "inventory-service", fallbackMethod = "fallbackGet")
-    public Inventory getInventory(String productId){
+
+    @CircuitBreaker(name = "inventory-service", fallbackMethod = "fallbackUpdate")
+    public Mono<Inventory> updateInventory(OrderDTO orderDTO) {
 
         return webClientBuilder.build()
                 .get()
-                .uri("http://inventory-service/inventories/product/" + productId)
+                .uri("http://inventory-service/inventories/product/" + orderDTO.getProductId())
                 .retrieve()
                 .bodyToMono(Inventory.class)
-                .block();
-
-    }
-    
-    public Inventory fallbackGet(String inventoryId, Throwable throwable){
-        System.out.println("Service is currently busy. Please try again later.");
-        return new Inventory();
-    }
-
-    @CircuitBreaker(name = "inventory-service", fallbackMethod = "fallbackPut")
-    public Inventory putInventory(Inventory inventory){
-
-        return webClientBuilder.build()
-                .put()
-                .uri("http://inventory-service/inventories/" + inventory.getId())
-                .body(Mono.just(inventory), Inventory.class)
-                .retrieve()
-                .onStatus(HttpStatus.NOT_FOUND::equals,
-                        clientResponse -> Mono.empty())
-                .bodyToMono(Inventory.class)
-                .block();
-
+                .flatMap(inventory -> {
+                    if(inventory.getQuantity() > orderDTO.getAmount()) {
+                        inventory.setQuantity(inventory.getQuantity() - orderDTO.getAmount());
+                        return webClientBuilder.build()
+                                .put()
+                                .uri("http://inventory-service/inventories/" + inventory.getId())
+                                .body(Mono.just(inventory), Inventory.class)
+                                .retrieve()
+                                .bodyToMono(Inventory.class);
+                    }else{
+                        return Mono.empty();
+                    }
+                });
     }
 
-    public Inventory fallbackPut(Inventory inventory, Throwable throwable){
+    public Mono<Inventory> fallbackUpdate(OrderDTO orderDTO, Throwable throwable) {
         System.out.println("Error while proceeding order, please try again later.");
-        return new Inventory();
+        return Mono.empty();
     }
 }

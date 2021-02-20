@@ -38,63 +38,33 @@ public class OrderService {
     }
 
     /**
-     *  If product-service is not available method returns:
-     *  Order with empty Product object
-     *  
-     *  If order is not found returns Mono.empty
+     * If product-service is not available method returns:
+     * Order with empty Product object
+     * <p>
+     * If order is not found returns Mono.empty
      */
     public Mono<OrderProductResponse> getOrderWithProduct(String orderId) {
         OrderProductResponse response = new OrderProductResponse();
         Mono<Order> order = orderRepository.findById(orderId);
         return order.switchIfEmpty(Mono.empty())
                 .flatMap(
-                o -> {
-                    Product product = productServiceClient.getProduct(o.getProductId());
-                    product.setId(o.getProductId());
-                    response.setOrder(orderMapper.toOrderDTO(o));
-                    response.setProduct(product);
-                    return Mono.just(response);
-                });
+                        o -> {
+                            Product product = productServiceClient.getProduct(o.getProductId());
+                            product.setId(o.getProductId());
+                            response.setOrder(orderMapper.toOrderDTO(o));
+                            response.setProduct(product);
+                            return Mono.just(response);
+                        });
     }
-    /**
-     * If inventory-service is not available while calling on GET method - fallback method will return empty Inventory object.
-     * If save method receives empty Invoice object, it reverses save order to database.
-     *
-     * If number of available items in inventory is larger than the order amount -> proceed to update inventory WHERE:
-     * If inventory-service is not available while calling on PUT method 
-     * it will invoke fallback method and return empty Inventory object and reverse save order.
-     * If PUT method on inventory-service is successful - both database changes are committed.
-     * 
-     * If number of available items in inventory is less than the order amount -> 
-     * does not proceed to update inventory & reverse save order to database.
-    */
-
     public Mono<OrderDTO> save(OrderDTO orderDTO) {
 
         Order order = orderMapper.toOrder(orderDTO);
-        Mono<Order> saved = orderRepository.save(order);
-        
-        return saved.flatMap(
-                o -> {
-                    Inventory inventory = inventoryServiceClient.getInventory(o.getProductId());
-                    if(inventory.getId() == null){
-                        orderRepository.delete(o);
-                        return Mono.empty();
-                    }else if(inventory.getQuantity() > o.getAmount()){
-                        inventory.setQuantity(inventory.getQuantity() - o.getAmount());
-                        Inventory i = inventoryServiceClient.putInventory(inventory);
-                        if(i.getId() == null){
-                            orderRepository.delete(o);
-                            return Mono.empty();
-                        }else{
-                            return Mono.just(orderMapper.toOrderDTO(o));
-                        }
-                    }else{
-                        orderRepository.delete(o);
-                        return Mono.empty();
-                    }
-                });
-        
+
+        Mono<Inventory> inventoryMono = inventoryServiceClient.updateInventory(orderDTO);
+
+        return inventoryMono.switchIfEmpty(Mono.empty())
+                .flatMap(i -> orderRepository.save(order).map(orderMapper::toOrderDTO));
+
     }
 //
 //    public void updateOrderStatus(String orderId, String orderStatus) {

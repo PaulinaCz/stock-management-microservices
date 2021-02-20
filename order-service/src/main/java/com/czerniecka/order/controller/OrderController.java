@@ -47,7 +47,7 @@ public class OrderController {
     public Mono<OrderDTO> addOrder(@Valid @RequestBody OrderDTO orderDTO){
         
         return orderService.save(orderDTO)
-                .switchIfEmpty(Mono.error(new Error(orderDTO.getProductId())));
+                .switchIfEmpty(Mono.error(new OrderNotCreated("Order not created", HttpStatus.CONFLICT)));
     }
 //
 //    @PatchMapping("/{orderId}")
@@ -55,6 +55,8 @@ public class OrderController {
 //        orderService.updateOrderStatus(orderId, orderStatus);
 //        return ResponseEntity.ok("Order status updated");
 //    }
+
+    //TODO - fix all exception handlers!
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(Exception.class)
@@ -69,13 +71,14 @@ public class OrderController {
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)
-    @ExceptionHandler(Error.class)
+    @ExceptionHandler(OrderNotCreated.class)
     public Map<String, Object> handleNotCreated(Exception e){
 
         Map<String, Object> errorBody = new HashMap<>();
 
+
         errorBody.put("timestamp", LocalDateTime.now());
-        errorBody.put("error", "Order of product " + e.getMessage() + " not added");
+        errorBody.put("error", e.getMessage());
 
         return errorBody;
     }
