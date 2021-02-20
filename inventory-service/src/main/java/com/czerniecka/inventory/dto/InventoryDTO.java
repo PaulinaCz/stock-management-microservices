@@ -19,5 +19,5 @@ public class InventoryDTO {
 
     @NotNull
     private int quantity;
-    private LocalDateTime lastModified;
+    private LocalDateTime lastModified = LocalDateTime.now();
 }
