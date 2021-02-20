@@ -62,10 +62,10 @@ public class ProductController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("")
-    public Mono<Product> addProduct(@Valid @RequestBody ProductDTO productDTO) {
+    public Mono<ProductDTO> addProduct(@Valid @RequestBody ProductDTO productDTO) {
         
         return productService.save(productDTO)
-                .switchIfEmpty(Mono.error(new Error(productDTO.getName())));
+                .switchIfEmpty(Mono.error(new Error()));
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -88,7 +88,7 @@ public class ProductController {
         Map<String, Object> errorBody = new HashMap<>();
 
         errorBody.put("timestamp", LocalDateTime.now());
-        errorBody.put("error", "Product " + e.getMessage() + " not added");
+        errorBody.put("error", "Product not added");
 
         return errorBody;
     }

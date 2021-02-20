@@ -78,7 +78,7 @@ public class ProductService {
                 });
     }
 
-    public Mono<Product> save(ProductDTO productDTO) {
+    public Mono<ProductDTO> save(ProductDTO productDTO) {
 
         Product product = productMapper.toProduct(productDTO);
 
@@ -89,7 +89,7 @@ public class ProductService {
             Mono<Inventory> inventoryMono = inventoryServiceClient.postInventory(inventory);
 
             return inventoryMono.switchIfEmpty(Mono.empty())
-                    .flatMap(i -> productRepository.save(product));
+                    .flatMap(i -> productRepository.save(product).map(productMapper::toProductDTO));
 
     }
 }
