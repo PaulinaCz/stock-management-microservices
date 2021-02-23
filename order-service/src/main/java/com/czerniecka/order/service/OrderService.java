@@ -49,8 +49,7 @@ public class OrderService {
         return order.switchIfEmpty(Mono.empty())
                 .flatMap(
                         o -> {
-                            Product product = productServiceClient.getProduct(o.getProductId());
-                            product.setId(o.getProductId());
+                            Mono<Product> product = productServiceClient.getProduct(o.getProductId());
                             response.setOrder(orderMapper.toOrderDTO(o));
                             response.setProduct(product);
                             return Mono.just(response);
