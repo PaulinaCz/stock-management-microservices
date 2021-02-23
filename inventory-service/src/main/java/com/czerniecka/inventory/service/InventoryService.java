@@ -46,8 +46,7 @@ public class InventoryService {
 
         inventories.map(
                 i -> {
-                    Product product = productServiceClient.getProduct(i.getProductId());
-                    product.setId(i.getProductId());
+                    Mono<Product> product = productServiceClient.getProduct(i.getProductId());
                     InventoryProductResponse vo = new InventoryProductResponse();
                     vo.setInventory(inventoryMapper.toInventoryDTO(i));
                     vo.setProduct(product);
@@ -68,8 +67,7 @@ public class InventoryService {
         return byId.switchIfEmpty(Mono.empty())
                 .flatMap(inventory -> {
                     InventoryProductResponse response = new InventoryProductResponse();
-                    Product product = productServiceClient.getProduct(inventory.getProductId());
-                    product.setId(inventory.getProductId());
+                    Mono<Product> product = productServiceClient.getProduct(inventory.getProductId());
                     response.setInventory(inventoryMapper.toInventoryDTO(inventory));
                     response.setProduct(product);
                     return Mono.just(response);

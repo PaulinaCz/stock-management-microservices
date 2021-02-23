@@ -5,6 +5,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 @Service
 public class ProductServiceClient {
@@ -17,18 +18,17 @@ public class ProductServiceClient {
     }
 
     @CircuitBreaker(name= "product-service", fallbackMethod = "fallback")
-    public Product getProduct(String  productId){
+    public Mono<Product> getProduct(String  productId){
         
         return webClientBuilder.build()
                 .get()
                 .uri("http://product-service/products/" + productId)
                 .retrieve()
-                .bodyToMono(Product.class)
-                .block();
+                .bodyToMono(Product.class);
     }
 
-    public Product fallback(String  productId, Throwable throwable){
+    public Mono<Product> fallback(String  productId, Throwable throwable){
         System.out.println("Service is currently busy. Please try again later.");
-        return new Product();
+        return Mono.empty();
     }
 }

@@ -4,6 +4,7 @@ import com.czerniecka.inventory.dto.InventoryDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import reactor.core.publisher.Mono;
 
 @Data
 @NoArgsConstructor
@@ -11,5 +12,5 @@ import lombok.NoArgsConstructor;
 public class InventoryProductResponse {
 
     private InventoryDTO inventory;
-    private Product product;
+    private Mono<Product> product;
 }
