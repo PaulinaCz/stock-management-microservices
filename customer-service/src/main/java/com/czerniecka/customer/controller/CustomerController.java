@@ -1,6 +1,7 @@
 package com.czerniecka.customer.controller;
 
 import com.czerniecka.customer.dto.CustomerDTO;
+import com.czerniecka.customer.exceptions.CustomerNotFound;
 import com.czerniecka.customer.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -36,7 +37,7 @@ public class CustomerController {
     public Mono<CustomerDTO> getCustomerById(@PathVariable("id") String customerId){
 
         return customerService.findCustomerById(customerId)
-                .switchIfEmpty(Mono.error(new Exception(customerId)));
+                .switchIfEmpty(Mono.error(new CustomerNotFound(customerId)));
 
     }
 
@@ -53,12 +54,12 @@ public class CustomerController {
                                @RequestBody @Valid CustomerDTO customerDTO){
 
         return customerService.updateCustomer(customerId, customerDTO)
-                .switchIfEmpty(Mono.error(new Exception(customerId)));
+                .switchIfEmpty(Mono.error(new CustomerNotFound(customerId)));
 
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(Exception.class)
+    @ExceptionHandler(CustomerNotFound.class)
     public Map<String, Object> handleNotFound(Exception ex){
 
         Map<String, Object> errorBody = new HashMap<>();
