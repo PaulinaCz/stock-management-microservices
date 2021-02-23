@@ -1,6 +1,8 @@
 package com.czerniecka.order.controller;
 
 import com.czerniecka.order.dto.OrderDTO;
+import com.czerniecka.order.exceptions.ItemNotAvailable;
+import com.czerniecka.order.exceptions.OrderNotFound;
 import com.czerniecka.order.service.OrderService;
 import com.czerniecka.order.vo.OrderProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.naming.ServiceUnavailableException;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -38,7 +41,7 @@ public class OrderController {
     public Mono<OrderProductResponse> getOrderWithProduct(@PathVariable("id") String orderId){
         
         return orderService.getOrderWithProduct(orderId)
-                .switchIfEmpty(Mono.error(new Exception(orderId)));
+                .switchIfEmpty(Mono.error(new OrderNotFound(orderId)));
 
     }
 
@@ -46,8 +49,7 @@ public class OrderController {
     @PostMapping("")
     public Mono<OrderDTO> addOrder(@Valid @RequestBody OrderDTO orderDTO){
         
-        return orderService.save(orderDTO)
-                .switchIfEmpty(Mono.error(new OrderNotCreated("Order not created", HttpStatus.CONFLICT)));
+        return orderService.save(orderDTO);
     }
 //
 //    @PatchMapping("/{orderId}")
@@ -56,11 +58,9 @@ public class OrderController {
 //        return ResponseEntity.ok("Order status updated");
 //    }
 
-    //TODO - fix all exception handlers!
-
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(Exception.class)
-    public Map<String, Object> handleNotFound(Exception e){
+    @ExceptionHandler(OrderNotFound.class)
+    public Map<String, Object> handleNotFound(OrderNotFound e){
 
         Map<String, Object> errorBody = new HashMap<>();
 
@@ -70,12 +70,11 @@ public class OrderController {
         return errorBody;
     }
 
-    @ResponseStatus(HttpStatus.CONFLICT)
-    @ExceptionHandler(OrderNotCreated.class)
-    public Map<String, Object> handleNotCreated(Exception e){
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public Map<String, Object> handleNotSaved(Exception e){
 
         Map<String, Object> errorBody = new HashMap<>();
-
 
         errorBody.put("timestamp", LocalDateTime.now());
         errorBody.put("error", e.getMessage());
@@ -83,6 +82,19 @@ public class OrderController {
         return errorBody;
     }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(ItemNotAvailable.class)
+    public Map<String, Object> handleNotInStock(Exception e){
+
+        Map<String, Object> errorBody = new HashMap<>();
+
+        errorBody.put("timestamp", LocalDateTime.now());
+        errorBody.put("error", e.getMessage());
+
+        return errorBody;
+    }
+
+    //TODO: fix input validation & exception handler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Map<String, Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
