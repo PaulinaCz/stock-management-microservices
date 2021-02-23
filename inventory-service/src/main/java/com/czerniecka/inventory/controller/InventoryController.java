@@ -1,6 +1,7 @@
 package com.czerniecka.inventory.controller;
 
 import com.czerniecka.inventory.dto.InventoryDTO;
+import com.czerniecka.inventory.exceptions.InventoryNotFound;
 import com.czerniecka.inventory.service.InventoryService;
 import com.czerniecka.inventory.vo.InventoryProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,22 +43,21 @@ public class InventoryController {
     public Mono<InventoryProductResponse> getInventoryById(@PathVariable("id") String inventoryId){
 
         return inventoryService.findInventoryById(inventoryId)
-                .switchIfEmpty(Mono.error(new Exception(inventoryId)));
+                .switchIfEmpty(Mono.error(new InventoryNotFound(inventoryId)));
     }
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/product/{id}")
     public Mono<InventoryDTO> getInventoryByProductId(@PathVariable("id") String productId){
         return inventoryService.findInventoryByProductId(productId)
-                .switchIfEmpty(Mono.error(new Exception("for product " + productId)));
+                .switchIfEmpty(Mono.error(new InventoryNotFound("for product " + productId)));
 
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("")
     public Mono<InventoryDTO> addInventory(@RequestBody @Valid InventoryDTO inventoryDTO){
-        return inventoryService.save(inventoryDTO)
-                .switchIfEmpty(Mono.error(new Error(inventoryDTO.getId())));
+        return inventoryService.save(inventoryDTO);
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -66,12 +66,12 @@ public class InventoryController {
                                 @RequestBody @Valid InventoryDTO inventoryDTO){
 
         return inventoryService.updateInventory(inventoryId, inventoryDTO)
-                .switchIfEmpty(Mono.error(new Exception(inventoryId)));
+                .switchIfEmpty(Mono.error(new InventoryNotFound(inventoryId)));
     }
 
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(Exception.class)
+    @ExceptionHandler(InventoryNotFound.class)
     public Map<String, Object> handleNotFound(Exception ex){
 
         Map<String, Object> errorBody = new HashMap<>();
@@ -82,17 +82,6 @@ public class InventoryController {
         return errorBody;
     }
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(Error.class)
-    public Map<String, Object> handleNotFoundForProduct(Exception ex){
-
-        Map<String, Object> errorBody = new HashMap<>();
-
-        errorBody.put("timestamp", LocalDateTime.now());
-        errorBody.put("error", "Inventory " + ex.getMessage() + " not saved");
-
-        return errorBody;
-    }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)

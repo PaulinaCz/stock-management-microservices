@@ -63,12 +63,12 @@ public class InventoryService {
      *  If inventory is not found returns Mono.empty
      */
     public Mono<InventoryProductResponse> findInventoryById(String inventoryId) {
-        Mono<Inventory> byId = inventoryRepository.findById(inventoryId);
-        return byId.switchIfEmpty(Mono.empty())
-                .flatMap(inventory -> {
-                    InventoryProductResponse response = new InventoryProductResponse();
-                    Mono<Product> product = productServiceClient.getProduct(inventory.getProductId());
-                    response.setInventory(inventoryMapper.toInventoryDTO(inventory));
+        InventoryProductResponse response = new InventoryProductResponse();
+        Mono<Inventory> inventory = inventoryRepository.findById(inventoryId);
+        return inventory.switchIfEmpty(Mono.empty())
+                .flatMap(i -> {
+                    Mono<Product> product = productServiceClient.getProduct(i.getProductId());
+                    response.setInventory(inventoryMapper.toInventoryDTO(i));
                     response.setProduct(product);
                     return Mono.just(response);
                 });
@@ -89,8 +89,7 @@ public class InventoryService {
         
         return inventoryRepository.findById(inventoryId)
                 .switchIfEmpty(Mono.empty())
-                .flatMap(
-                        inventory -> {
+                .flatMap(inventory -> {
                             inventory.setQuantity(inventoryDTO.getQuantity());
                             inventory.setLastModified(LocalDateTime.now());
                             Mono<Inventory> updated = inventoryRepository.save(inventory);
