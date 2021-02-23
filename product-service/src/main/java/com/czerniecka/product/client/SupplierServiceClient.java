@@ -5,6 +5,9 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+
+import javax.naming.ServiceUnavailableException;
 
 @Service
 public class SupplierServiceClient {
@@ -18,20 +21,22 @@ public class SupplierServiceClient {
     }
 
     @CircuitBreaker(name="supplier-service", fallbackMethod = "fallback")
-    public Supplier getSupplier(String supplierId){
+    public Mono<Supplier> getSupplier(String supplierId){
 
         return webClientBuilder.build()
                 .get()
                 .uri("http://supplier-service/suppliers/" + supplierId)
                 .retrieve()
                 .bodyToMono(Supplier.class)
-                .block();
+                .onErrorResume(e -> Mono.error(
+                        new ServiceUnavailableException(
+                                "Service is currently busy. Please try again later")
+                ));
 
     }
 
-    public Supplier fallback(String supplierId, Throwable throwable){
-        System.out.println("Service is currently busy. Please try again later.");
-        return new Supplier();
+    public Mono<Supplier> fallback(String supplierId, Throwable throwable){
+        return Mono.error(new ServiceUnavailableException("Service is currently busy. Please try again later."));
     }
 
 }

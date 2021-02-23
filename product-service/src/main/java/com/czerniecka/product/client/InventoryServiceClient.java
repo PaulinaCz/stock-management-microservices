@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import javax.naming.ServiceUnavailableException;
+
 @Service
 public class InventoryServiceClient {
 
@@ -26,11 +28,13 @@ public class InventoryServiceClient {
                 .uri("http://inventory-service/inventories")
                 .body(Mono.just(inventory), Inventory.class)
                 .retrieve()
-                .bodyToMono(Inventory.class);
+                .bodyToMono(Inventory.class)
+                .onErrorResume(e -> Mono.error(
+                        new ServiceUnavailableException("Error while creating product inventory. Product not saved.")
+                ));
 
     }
     public Mono<Inventory> fallback(Inventory inventory, Throwable throwable){
-        System.out.println("Error while creating product inventory. Product not saved.");
-        return Mono.empty();
+        return Mono.error(new ServiceUnavailableException("Error while creating product inventory. Product not saved."));
     }
 }

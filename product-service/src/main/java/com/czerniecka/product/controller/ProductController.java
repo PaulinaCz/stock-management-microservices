@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.naming.ServiceUnavailableException;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -37,7 +38,7 @@ public class ProductController {
     public Mono<ProductDTO> getProductById(@PathVariable("id") String productId) {
 
         return productService.findProductById(productId)
-                .switchIfEmpty(Mono.error(new Exception(productId)));
+                .switchIfEmpty(Mono.error(new ProductNotFound(productId)));
     }
 
     @GetMapping("/category/{category}")
@@ -55,7 +56,7 @@ public class ProductController {
     public Mono<ProductSupplierResponse> getProductWithSupplier(@PathVariable("id") String productId) {
 
         return productService.getProductWithSupplier(productId)
-                .switchIfEmpty(Mono.error(new Exception(productId)));
+                .switchIfEmpty(Mono.error(new ProductNotFound(productId)));
         
     }
 
@@ -63,13 +64,12 @@ public class ProductController {
     @PostMapping("")
     public Mono<ProductDTO> addProduct(@Valid @RequestBody ProductDTO productDTO) {
         
-        return productService.save(productDTO)
-                .switchIfEmpty(Mono.error(new ProductNotAdded()));
+        return productService.save(productDTO);
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(Exception.class)
-    public Map<String, Object> handleNotFound(Exception e){
+    @ExceptionHandler(ProductNotFound.class)
+    public Map<String, Object> handleNotFound(ProductNotFound e){
 
 
         Map<String, Object> errorBody = new HashMap<>();
@@ -80,19 +80,20 @@ public class ProductController {
         return errorBody;
     }
 
-    @ResponseStatus(HttpStatus.CONFLICT)
-    @ExceptionHandler(ProductNotAdded.class)
-    public Map<String, Object> handleNotCreated(Exception e){
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public Map<String, Object> handleNotFound(ServiceUnavailableException e){
+
 
         Map<String, Object> errorBody = new HashMap<>();
 
         errorBody.put("timestamp", LocalDateTime.now());
-        errorBody.put("error", "Product not added");
+        errorBody.put("error", e.getMessage());
 
         return errorBody;
     }
-
-    //TODO: fix input validation & response
+    
+    //TODO: fix input validation & exception handler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Map<String, Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
