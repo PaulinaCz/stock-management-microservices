@@ -52,8 +52,7 @@ public class InvoiceService {
 
         return invoice.switchIfEmpty(Mono.empty())
                 .flatMap(i -> {
-                    Product product = productServiceClient.getProduct(i.getProductId());
-                    product.setId(i.getProductId());
+                    Mono<Product> product = productServiceClient.getProduct(i.getProductId());
                     response.setInvoice(invoiceMapper.toInvoiceDTO(i));
                     response.setProduct(product);
                     return Mono.just(response);
@@ -68,24 +67,13 @@ public class InvoiceService {
      * If PUT method on inventory-service is successful - both database changes are committed.
      */
     public Mono<InvoiceDTO> save(InvoiceDTO invoiceDTO) {
+        
         Invoice invoice = invoiceMapper.toInvoice(invoiceDTO);
-        Mono<Invoice> saved = invoiceRepository.save(invoice);
 
-        return saved.flatMap(i -> {
-            Inventory inventory = inventoryServiceClient.getInventory(i.getProductId());
-            if(inventory.getId() == null){
-                invoiceRepository.delete(i);
-                return Mono.empty();
-            }else{
-                inventory.setQuantity(inventory.getQuantity() + i.getAmount());
-                Inventory inventoryUpdated = inventoryServiceClient.putInventory(inventory);
-                if(inventoryUpdated.getId() == null){
-                    invoiceRepository.delete(i);
-                    return Mono.empty();
-                }else{
-                    return Mono.just(invoiceMapper.toInvoiceDTO(i));
-                }
-            }
-        });
+        Mono<Inventory> inventoryMono = inventoryServiceClient.updateInventory(invoiceDTO);
+        
+        return inventoryMono.switchIfEmpty(Mono.empty())
+                .flatMap(i -> invoiceRepository.save(invoice).map(invoiceMapper::toInvoiceDTO));
+
     }
 }

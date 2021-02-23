@@ -4,6 +4,7 @@ import com.czerniecka.invoice.dto.InvoiceDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import reactor.core.publisher.Mono;
 
 @Data
 @AllArgsConstructor
@@ -11,5 +12,5 @@ import lombok.NoArgsConstructor;
 public class InvoiceProductResponse {
     
     private InvoiceDTO invoice;
-    private Product product;
+    private Mono<Product> product;
 }
