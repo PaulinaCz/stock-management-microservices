@@ -1,6 +1,7 @@
 package com.czerniecka.supplier.controller;
 
 import com.czerniecka.supplier.dto.SupplierDTO;
+import com.czerniecka.supplier.exceptions.SupplierNotFound;
 import com.czerniecka.supplier.service.SupplierService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -36,7 +37,7 @@ public class SupplierController {
     public Mono<SupplierDTO> getSupplierById(@PathVariable("id") String supplierId){
         
         return supplierService.findSupplierById(supplierId)
-                .switchIfEmpty(Mono.error(new Exception(supplierId)));
+                .switchIfEmpty(Mono.error(new SupplierNotFound(supplierId)));
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -51,11 +52,11 @@ public class SupplierController {
                                @RequestBody @Valid SupplierDTO supplierDTO){
 
         return supplierService.updateSupplier(supplierId, supplierDTO)
-                .switchIfEmpty(Mono.error(new Exception(supplierId)));
+                .switchIfEmpty(Mono.error(new SupplierNotFound(supplierId)));
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(Exception.class)
+    @ExceptionHandler(SupplierNotFound.class)
     public Map<String, Object> handleNotFound(Exception ex){
 
         Map<String, Object> errorBody = new HashMap<>();
@@ -66,6 +67,7 @@ public class SupplierController {
         return errorBody;
     }
 
+    //TODO: fix input validation & response
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Map<String, Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
