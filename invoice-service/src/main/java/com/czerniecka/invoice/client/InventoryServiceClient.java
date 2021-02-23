@@ -43,8 +43,7 @@ public class InventoryServiceClient {
     }
     
     public Mono<Inventory> fallbackUpdate(InvoiceDTO invoiceDTO, Throwable throwable){
-        System.out.println("Error while processing invoice, please try again later. ");
-        return Mono.empty();
+        return Mono.error(new ServiceUnavailableException("Error while processing invoice, please try again later."));
     }
 
 }

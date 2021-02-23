@@ -1,6 +1,7 @@
 package com.czerniecka.invoice.controller;
 
 import com.czerniecka.invoice.dto.InvoiceDTO;
+import com.czerniecka.invoice.exceptions.InvoiceNotFound;
 import com.czerniecka.invoice.service.InvoiceService;
 import com.czerniecka.invoice.vo.InvoiceProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.naming.ServiceUnavailableException;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -37,7 +39,7 @@ public class InvoiceController {
     public Mono<InvoiceProductResponse> getInvoiceWithProduct(@PathVariable("id") String invoiceId){
         
         return invoiceService.getInvoiceWithProduct(invoiceId)
-                .switchIfEmpty(Mono.error(new Exception(invoiceId)));
+                .switchIfEmpty(Mono.error(new InvoiceNotFound(invoiceId)));
         
     }
 
@@ -45,12 +47,11 @@ public class InvoiceController {
     @PostMapping("")
     public Mono<InvoiceDTO> addInvoice(@RequestBody @Valid InvoiceDTO invoiceDTO){
         
-        return invoiceService.save(invoiceDTO)
-                .switchIfEmpty(Mono.error(new Error(invoiceDTO.getProductId())));
+        return invoiceService.save(invoiceDTO);
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(Exception.class)
+    @ExceptionHandler(InvoiceNotFound.class)
     public Map<String, Object> handleNotFound(Exception e){
 
         Map<String, Object> errorBody = new HashMap<>();
@@ -61,17 +62,19 @@ public class InvoiceController {
         return errorBody;
     }
 
-    @ResponseStatus(HttpStatus.CONFLICT)
-    @ExceptionHandler(Error.class)
-    public Map<String, Object> handleNotCreated(Exception e){
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public Map<String, Object> handleNotSaved(Exception e){
 
         Map<String, Object> errorBody = new HashMap<>();
 
         errorBody.put("timestamp", LocalDateTime.now());
-        errorBody.put("error", "Invoice for product " + e.getMessage() + " was not placed");
+        errorBody.put("error", e.getMessage());
 
         return errorBody;
     }
+
+    //TODO: fix input validation & exception handler
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
