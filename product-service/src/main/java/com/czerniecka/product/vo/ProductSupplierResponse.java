@@ -4,6 +4,7 @@ import com.czerniecka.product.dto.ProductDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import reactor.core.publisher.Mono;
 
 @Data
 @NoArgsConstructor
@@ -11,5 +12,5 @@ import lombok.NoArgsConstructor;
 public class ProductSupplierResponse {
 
     private ProductDTO product;
-    private Supplier supplier;
+    private Mono<Supplier> supplier;
 }

@@ -71,7 +71,7 @@ public class ProductService {
         Mono<Product> product = productRepository.findById(productId);
         return product.switchIfEmpty(Mono.empty())
                 .flatMap(p -> {
-                    Supplier supplier = supplierServiceClient.getSupplier(p.getSupplierId());
+                    Mono<Supplier> supplier = supplierServiceClient.getSupplier(p.getSupplierId());
                     response.setProduct(productMapper.toProductDTO(p));
                     response.setSupplier(supplier);
                     return Mono.just(response);
