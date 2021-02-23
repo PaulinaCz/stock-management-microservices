@@ -1,6 +1,7 @@
 package com.czerniecka.product.controller;
 
 import com.czerniecka.product.dto.ProductDTO;
+import com.czerniecka.product.exceptions.ProductNotFound;
 import com.czerniecka.product.service.ProductService;
 import com.czerniecka.product.vo.ProductSupplierResponse;
 import org.springframework.beans.factory.annotation.Autowired;

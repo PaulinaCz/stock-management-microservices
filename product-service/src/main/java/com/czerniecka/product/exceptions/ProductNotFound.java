@@ -1,4 +1,4 @@
-package com.czerniecka.product.controller;
+package com.czerniecka.product.exceptions;
 
 public class ProductNotFound extends Throwable{
 
