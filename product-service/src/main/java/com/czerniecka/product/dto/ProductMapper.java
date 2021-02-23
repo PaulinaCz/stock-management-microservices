@@ -9,4 +9,6 @@ public interface ProductMapper {
 
     ProductDTO toProductDTO(Product product);
     Product toProduct(ProductDTO productDTO);
+    
+    ShowProductDTO toShowProductDTO(Product product);
 }

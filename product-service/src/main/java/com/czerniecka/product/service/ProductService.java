@@ -4,6 +4,7 @@ import com.czerniecka.product.client.InventoryServiceClient;
 import com.czerniecka.product.client.SupplierServiceClient;
 import com.czerniecka.product.dto.ProductDTO;
 import com.czerniecka.product.dto.ProductMapper;
+import com.czerniecka.product.dto.ShowProductDTO;
 import com.czerniecka.product.entity.Product;
 import com.czerniecka.product.repository.ProductRepository;
 import com.czerniecka.product.vo.Inventory;
@@ -38,26 +39,26 @@ public class ProductService {
         return all.map(productMapper::toProductDTO);
     }
 
-    public Mono<ProductDTO> findProductById(String productId) {
+    public Mono<ShowProductDTO> findProductById(String productId) {
 
         Mono<Product> byId = productRepository.findById(productId);
-        return byId.map(productMapper::toProductDTO);
+        return byId.map(productMapper::toShowProductDTO);
 
     }
 
-    public Flux<ProductDTO> findProductsWhereCategoryContains(String category) {
+    public Flux<ShowProductDTO> findProductsWhereCategoryContains(String category) {
 
         Flux<Product> allByCategory = productRepository.findProductByCategoryContaining(category);
 
-        return allByCategory.map(productMapper::toProductDTO);
+        return allByCategory.map(productMapper::toShowProductDTO);
 
     }
 
-    public Flux<ProductDTO> findProductsBySupplier(String supplierId) {
+    public Flux<ShowProductDTO> findProductsBySupplier(String supplierId) {
 
         Flux<Product> allBySupplierId = productRepository.findAllBySupplierId(supplierId);
 
-        return allBySupplierId.map(productMapper::toProductDTO);
+        return allBySupplierId.map(productMapper::toShowProductDTO);
     }
 
     /**
