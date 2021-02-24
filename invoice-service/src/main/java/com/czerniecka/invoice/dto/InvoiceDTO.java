@@ -4,7 +4,6 @@ import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
-import java.time.LocalDateTime;
 
 @Data
 public class InvoiceDTO {
@@ -17,8 +16,6 @@ public class InvoiceDTO {
     @NotNull
     @Positive(message = "Invoice amount must be greater than 0")
     private int amount;
-    private LocalDateTime datePlaced;
-
     @NotNull(message = "Supplier Id must not be null")
     private String supplierId;
 
