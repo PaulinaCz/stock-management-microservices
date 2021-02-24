@@ -1,5 +1,8 @@
 package com.czerniecka.product.client;
 
+import com.czerniecka.product.dto.ProductDTO;
+import com.czerniecka.product.exceptions.ProductNotFound;
+import com.czerniecka.product.vo.ProductSupplierResponse;
 import com.czerniecka.product.vo.Supplier;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +23,35 @@ public class SupplierServiceClient {
         this.webClientBuilder = webClientBuilder;
     }
 
+//    @CircuitBreaker(name="supplier-service", fallbackMethod = "fallback")
+//    public Mono<ProductSupplierResponse> getProductWithSupplier(String productId){
+//
+//        return webClientBuilder.build()
+//                .get()
+//                .uri("http://product-service/products/" + productId)
+//                .retrieve()
+//                .bodyToMono(ProductDTO.class)
+//                .switchIfEmpty(Mono.error(new ProductNotFound(productId)))
+//                .flatMap(
+//                        p -> {
+//                              Mono<Supplier> s = webClientBuilder.build()
+//                                      .get()
+//                                      .uri("http://supplier-service/suppliers/")
+//                                    .retrieve()
+//                                    .bodyToMono(Supplier.class)
+//                                    .onErrorResume(e -> Mono.error(
+//                                            new ServiceUnavailableException(
+//                                                    "Service is currently busy. Please try again later")));
+//                              return Mono.just(new ProductSupplierResponse(p, s));
+//                        }
+//                );
+//
+//
+//    }
+
+
     @CircuitBreaker(name="supplier-service", fallbackMethod = "fallback")
-    public Mono<Supplier> getSupplier(String supplierId){
+    public Supplier getSupplier(String supplierId){
 
         return webClientBuilder.build()
                 .get()
@@ -31,12 +61,13 @@ public class SupplierServiceClient {
                 .onErrorResume(e -> Mono.error(
                         new ServiceUnavailableException(
                                 "Service is currently busy. Please try again later")
-                ));
+                ))
+                .block();
 
     }
 
-    public Mono<Supplier> fallback(String supplierId, Throwable throwable){
-        return Mono.error(new ServiceUnavailableException("Service is currently busy. Please try again later."));
+    public Supplier fallback(String supplierId, Throwable throwable){
+        return new Supplier();
     }
 
 }

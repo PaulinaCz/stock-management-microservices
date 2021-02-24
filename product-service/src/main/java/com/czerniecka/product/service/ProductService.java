@@ -67,13 +67,16 @@ public class ProductService {
      * If product is not found returns Mono.empty
      */
     public Mono<ProductSupplierResponse> getProductWithSupplier(String productId) {
+        var response = new ProductSupplierResponse();
         Mono<Product> product = productRepository.findById(productId);
         return product.switchIfEmpty(Mono.empty())
-                .map(p ->
-                    new ProductSupplierResponse(productMapper.toProductDTO(p), supplierServiceClient.getSupplier(p.getSupplierId())
-                ));
+                .flatMap(p ->{
+                    response.setProduct(productMapper.toProductDTO(p));
+                    response.setSupplier(supplierServiceClient.getSupplier(p.getSupplierId()));
+                    return Mono.just(response);
+                });
     }
-
+    
     public Mono<ProductDTO> save(CreateProductDTO productDTO) {
 
         Product product = productMapper.toCreateProduct(productDTO);
