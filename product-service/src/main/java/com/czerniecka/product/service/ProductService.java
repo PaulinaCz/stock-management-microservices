@@ -2,14 +2,13 @@ package com.czerniecka.product.service;
 
 import com.czerniecka.product.client.InventoryServiceClient;
 import com.czerniecka.product.client.SupplierServiceClient;
+import com.czerniecka.product.dto.CreateProductDTO;
 import com.czerniecka.product.dto.ProductDTO;
 import com.czerniecka.product.dto.ProductMapper;
-import com.czerniecka.product.dto.ShowProductDTO;
 import com.czerniecka.product.entity.Product;
 import com.czerniecka.product.repository.ProductRepository;
 import com.czerniecka.product.vo.Inventory;
 import com.czerniecka.product.vo.ProductSupplierResponse;
-import com.czerniecka.product.vo.Supplier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -39,26 +38,26 @@ public class ProductService {
         return all.map(productMapper::toProductDTO);
     }
 
-    public Mono<ShowProductDTO> findProductById(String productId) {
+    public Mono<ProductDTO> findProductById(String productId) {
 
         Mono<Product> byId = productRepository.findById(productId);
-        return byId.map(productMapper::toShowProductDTO);
+        return byId.map(productMapper::toProductDTO);
 
     }
 
-    public Flux<ShowProductDTO> findProductsWhereCategoryContains(String category) {
+    public Flux<ProductDTO> findProductsWhereCategoryContains(String category) {
 
         Flux<Product> allByCategory = productRepository.findProductByCategoryContaining(category);
 
-        return allByCategory.map(productMapper::toShowProductDTO);
+        return allByCategory.map(productMapper::toProductDTO);
 
     }
 
-    public Flux<ShowProductDTO> findProductsBySupplier(String supplierId) {
+    public Flux<ProductDTO> findProductsBySupplier(String supplierId) {
 
         Flux<Product> allBySupplierId = productRepository.findAllBySupplierId(supplierId);
 
-        return allBySupplierId.map(productMapper::toShowProductDTO);
+        return allBySupplierId.map(productMapper::toProductDTO);
     }
 
     /**
@@ -68,20 +67,16 @@ public class ProductService {
      * If product is not found returns Mono.empty
      */
     public Mono<ProductSupplierResponse> getProductWithSupplier(String productId) {
-        ProductSupplierResponse response = new ProductSupplierResponse();
         Mono<Product> product = productRepository.findById(productId);
         return product.switchIfEmpty(Mono.empty())
-                .flatMap(p -> {
-                    Mono<Supplier> supplier = supplierServiceClient.getSupplier(p.getSupplierId());
-                    response.setProduct(productMapper.toProductDTO(p));
-                    response.setSupplier(supplier);
-                    return Mono.just(response);
-                });
+                .map(p ->
+                    new ProductSupplierResponse(productMapper.toProductDTO(p), supplierServiceClient.getSupplier(p.getSupplierId())
+                ));
     }
 
-    public Mono<ProductDTO> save(ProductDTO productDTO) {
+    public Mono<ProductDTO> save(CreateProductDTO productDTO) {
 
-        Product product = productMapper.toProduct(productDTO);
+        Product product = productMapper.toCreateProduct(productDTO);
 
         Inventory inventory = new Inventory();
         inventory.setProductId(product.getId());

@@ -1,7 +1,7 @@
 package com.czerniecka.product.controller;
 
+import com.czerniecka.product.dto.CreateProductDTO;
 import com.czerniecka.product.dto.ProductDTO;
-import com.czerniecka.product.dto.ShowProductDTO;
 import com.czerniecka.product.exceptions.ProductNotFound;
 import com.czerniecka.product.service.ProductService;
 import com.czerniecka.product.vo.ProductSupplierResponse;
@@ -37,19 +37,19 @@ public class ProductController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/{id}")
-    public Mono<ShowProductDTO> getProductById(@PathVariable("id") String productId) {
+    public Mono<ProductDTO> getProductById(@PathVariable("id") String productId) {
 
         return productService.findProductById(productId)
                 .switchIfEmpty(Mono.error(new ProductNotFound(productId)));
     }
 
     @GetMapping("/category/{category}")
-    public Flux<ShowProductDTO> getProductsWhereCategoryContains(@PathVariable String category) {
+    public Flux<ProductDTO> getProductsWhereCategoryContains(@PathVariable String category) {
         return productService.findProductsWhereCategoryContains(category);
     }
 
     @GetMapping("/supplier/{id}")
-    public Flux<ShowProductDTO> getProductsBySupplier(@PathVariable("id") String supplierId) {
+    public Flux<ProductDTO> getProductsBySupplier(@PathVariable("id") String supplierId) {
         return productService.findProductsBySupplier(supplierId);
     }
 
@@ -64,7 +64,7 @@ public class ProductController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("")
-    public Mono<ProductDTO> addProduct(@Valid @RequestBody ProductDTO productDTO) {
+    public Mono<ProductDTO> addProduct(@Valid @RequestBody CreateProductDTO productDTO) {
         
         return productService.save(productDTO);
     }
