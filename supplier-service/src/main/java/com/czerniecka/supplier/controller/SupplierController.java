@@ -57,7 +57,7 @@ public class SupplierController {
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(SupplierNotFound.class)
-    public Map<String, Object> handleNotFound(Exception ex){
+    public Map<String, Object> handleNotFound(SupplierNotFound ex){
 
         Map<String, Object> errorBody = new HashMap<>();
 
