@@ -72,7 +72,7 @@ public class OrderController {
 
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
     @ExceptionHandler(ServiceUnavailableException.class)
-    public Map<String, Object> handleNotSaved(Exception e){
+    public Map<String, Object> handleNotSaved(ServiceUnavailableException e){
 
         Map<String, Object> errorBody = new HashMap<>();
 
@@ -84,7 +84,7 @@ public class OrderController {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(ItemNotAvailable.class)
-    public Map<String, Object> handleNotInStock(Exception e){
+    public Map<String, Object> handleNotInStock(ItemNotAvailable e){
 
         Map<String, Object> errorBody = new HashMap<>();
 
