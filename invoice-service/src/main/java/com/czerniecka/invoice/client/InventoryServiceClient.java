@@ -12,7 +12,7 @@ import javax.naming.ServiceUnavailableException;
 
 @Service
 public class InventoryServiceClient {
-    
+
     private WebClient.Builder webClientBuilder;
 
     @Autowired
@@ -21,8 +21,8 @@ public class InventoryServiceClient {
     }
 
     @CircuitBreaker(name = "inventory-service", fallbackMethod = "fallbackUpdate")
-    public Mono<Inventory> updateInventory(InvoiceDTO invoiceDTO){
-        
+    public Mono<Inventory> updateInventory(InvoiceDTO invoiceDTO) {
+
         return webClientBuilder.build()
                 .get()
                 .uri("http://inventory-service/inventories/product/" + invoiceDTO.getProductId())
@@ -31,18 +31,21 @@ public class InventoryServiceClient {
                 .onErrorResume(e -> Mono.error(
                         new ServiceUnavailableException("Service is currently busy. Please try again later")
                 ))
-                .flatMap(inventory -> webClientBuilder.build()
-                        .put()
-                        .uri("http://inventory-service/inventories/" + inventory.getId())
-                        .body(Mono.just(inventory), Inventory.class)
-                        .retrieve()
-                        .bodyToMono(Inventory.class)
-                        .onErrorResume(e -> Mono.error(
-                                new ServiceUnavailableException("Error while processing invoice, please try again later.")
-                        )));
+                .flatMap(inventory -> {
+                    inventory.setQuantity(inventory.getQuantity() + invoiceDTO.getAmount());
+                    return webClientBuilder.build()
+                            .put()
+                            .uri("http://inventory-service/inventories/" + inventory.getId())
+                            .body(Mono.just(inventory), Inventory.class)
+                            .retrieve()
+                            .bodyToMono(Inventory.class)
+                            .onErrorResume(e -> Mono.error(
+                                    new ServiceUnavailableException("Error while processing invoice, please try again later.")
+                            ));
+                });
     }
-    
-    public Mono<Inventory> fallbackUpdate(InvoiceDTO invoiceDTO, Throwable throwable){
+
+    public Mono<Inventory> fallbackUpdate(InvoiceDTO invoiceDTO, Throwable throwable) {
         return Mono.error(new ServiceUnavailableException("Error while processing invoice, please try again later."));
     }
 
