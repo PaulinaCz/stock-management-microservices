@@ -60,7 +60,7 @@ public class CustomerController {
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(CustomerNotFound.class)
-    public Map<String, Object> handleNotFound(Exception ex){
+    public Map<String, Object> handleNotFound(CustomerNotFound ex){
 
         Map<String, Object> errorBody = new HashMap<>();
 
