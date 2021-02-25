@@ -7,7 +7,6 @@ import com.czerniecka.invoice.dto.InvoiceMapper;
 import com.czerniecka.invoice.entity.Invoice;
 import com.czerniecka.invoice.repository.InvoiceRepository;
 import com.czerniecka.invoice.vo.Inventory;
-import com.czerniecka.invoice.vo.Product;
 import com.czerniecka.invoice.vo.InvoiceProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,22 +40,17 @@ public class InvoiceService {
 
     /**
      *  If product-service is not available method returns:
-     *  Invoice with empty Product object
+     *  Mono of InvoiceProductResponse
+     *  with Invoice object and empty Product object
      *
-     *  If invoice is not found returns Mono.empty
+     *  If invoice is not found returns empty Mono
+     *  which will return "Invoice not found error" in controller
      */
     public Mono<InvoiceProductResponse> getInvoiceWithProduct(String invoiceId) {
-        InvoiceProductResponse response = new InvoiceProductResponse();
-
-        Mono<Invoice> invoice = invoiceRepository.findById(invoiceId);
+        var invoice= invoiceRepository.findById(invoiceId);
 
         return invoice.switchIfEmpty(Mono.empty())
-                .flatMap(i -> {
-                    Mono<Product> product = productServiceClient.getProduct(i.getProductId());
-                    response.setInvoice(invoiceMapper.toInvoiceDTO(i));
-                    response.setProduct(product);
-                    return Mono.just(response);
-                });
+                .flatMap(i -> productServiceClient.getProduct(invoiceId, invoiceMapper.toInvoiceDTO(i)));
 
     }
 

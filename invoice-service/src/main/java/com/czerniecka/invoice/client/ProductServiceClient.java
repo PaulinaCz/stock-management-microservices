@@ -1,5 +1,7 @@
 package com.czerniecka.invoice.client;
 
+import com.czerniecka.invoice.dto.InvoiceDTO;
+import com.czerniecka.invoice.vo.InvoiceProductResponse;
 import com.czerniecka.invoice.vo.Product;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,21 +22,20 @@ public class ProductServiceClient {
         this.webClientBuilder = webClientBuilder;
     }
 
-    @CircuitBreaker(name = "product-service", fallbackMethod = "fallback")
-    public Mono<Product> getProduct(String productId) {
+//    @CircuitBreaker(name = "product-service", fallbackMethod = "fallback")
+    public Mono<InvoiceProductResponse> getProduct(String productId, InvoiceDTO invoice) {
 
         return webClientBuilder.build()
                 .get()
                 .uri("http://product-service/products/" + productId)
                 .retrieve()
                 .bodyToMono(Product.class)
-                .onErrorResume(e -> Mono.error(
-                        new ServiceUnavailableException("Service is currently busy. Please try again later.")
-                ));
+                .onErrorReturn(new Product())
+                .flatMap(product -> Mono.just(new InvoiceProductResponse(invoice, product)));
     }
 
-    public Mono<Product> fallback(String productId, Throwable throwable) {
-        return Mono.error(new ServiceUnavailableException("Service is currently busy. Please try again later."));
-    }
+//    public Mono<Product> fallback(String productId, Throwable throwable) {
+//        return Mono.error(new ServiceUnavailableException("Service is currently busy. Please try again later."));
+//    }
 
 }
