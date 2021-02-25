@@ -34,7 +34,7 @@ public class InventoryController {
     }
 
     @GetMapping("/products")
-    public Flux<List<InventoryProductResponse>> getAllWithProducts(){
+    public Flux<InventoryProductResponse> getAllWithProducts(){
         return inventoryService.findAllWithProducts();
     }
 

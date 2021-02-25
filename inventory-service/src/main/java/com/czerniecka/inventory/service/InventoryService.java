@@ -5,7 +5,6 @@ import com.czerniecka.inventory.repository.InventoryRepository;
 import com.czerniecka.inventory.dto.InventoryDTO;
 import com.czerniecka.inventory.dto.InventoryMapper;
 import com.czerniecka.inventory.entity.Inventory;
-import com.czerniecka.inventory.vo.Product;
 import com.czerniecka.inventory.vo.InventoryProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,8 +12,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class InventoryService {
@@ -38,40 +35,30 @@ public class InventoryService {
 
     /**
      *  When product-service is not available method returns 
-     *  List of Inventories where each has empty Product object
+     *  Flux of InventoryProductResponse
+     *  where each IPR has
+     *  Inventory object and empty Product object
      */
-    public Flux<List<InventoryProductResponse>> findAllWithProducts() {
+    public Flux<InventoryProductResponse> findAllWithProducts() {
         Flux<Inventory> inventories = inventoryRepository.findAll();
-        List<InventoryProductResponse> result = new ArrayList<>();
 
-        inventories.map(
-                i -> {
-                    Mono<Product> product = productServiceClient.getProduct(i.getProductId());
-                    InventoryProductResponse vo = new InventoryProductResponse();
-                    vo.setInventory(inventoryMapper.toInventoryDTO(i));
-                    vo.setProduct(product);
-                    result.add(vo);
-                    return result;
-                });
-        return Flux.just(result);
+        return inventories.flatMap(
+                i -> productServiceClient.getProduct(i.getProductId(), inventoryMapper.toInventoryDTO(i))
+        );
     }
 
     /**
-     *  When product-service is not available method returns:
-     *  Inventory with empty Product object 
-     *  
-     *  If inventory is not found returns Mono.empty
+     *  If product-service is not available method returns:
+     *  Mono of InventoryProductResponse
+     *  with Inventory object and empty Product object
+     *
+     *  If inventory is not found returns empty Mono
+     *  which will return "Inventory not found error" in controller
      */
     public Mono<InventoryProductResponse> findInventoryById(String inventoryId) {
-        InventoryProductResponse response = new InventoryProductResponse();
-        Mono<Inventory> inventory = inventoryRepository.findById(inventoryId);
+        var inventory = inventoryRepository.findById(inventoryId);
         return inventory.switchIfEmpty(Mono.empty())
-                .flatMap(i -> {
-                    Mono<Product> product = productServiceClient.getProduct(i.getProductId());
-                    response.setInventory(inventoryMapper.toInventoryDTO(i));
-                    response.setProduct(product);
-                    return Mono.just(response);
-                });
+                .flatMap(i -> productServiceClient.getProduct(inventoryId, inventoryMapper.toInventoryDTO(i)));
     }
 
     public Mono<InventoryDTO> findInventoryByProductId(String productId) {
