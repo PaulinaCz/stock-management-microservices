@@ -61,22 +61,17 @@ public class ProductService {
     }
 
     /**
+     * If supplier-service is not available method returns:
+     * Mono of ProductSupplierResponse
+     * with Product object and empty Supplier object
+     *
      * If product is not found returns empty Mono
      * which will return "Product not found error" in controller
-     *
-     * If supplier-service is not available method returns:
-     * Product with empty Supplier object
-     *
      */
     public Mono<ProductSupplierResponse> getProductWithSupplier(String productId) {
-        var response = new ProductSupplierResponse();
-        Mono<Product> product = productRepository.findById(productId);
+        var product = productRepository.findById(productId);
         return product.switchIfEmpty(Mono.empty())
-                .flatMap(p ->{
-                    response.setProduct(productMapper.toProductDTO(p));
-                    response.setSupplier(supplierServiceClient.getSupplier(p.getSupplierId()));
-                    return Mono.just(response);
-                });
+                .flatMap(p -> supplierServiceClient.getSupplier(productId, productMapper.toProductDTO(p)));
     }
 
     /**

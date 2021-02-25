@@ -1,10 +1,13 @@
 package com.czerniecka.product.client;
 
+import com.czerniecka.product.dto.ProductDTO;
+import com.czerniecka.product.vo.ProductSupplierResponse;
 import com.czerniecka.product.vo.Supplier;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 @Service
 public class SupplierServiceClient {
@@ -23,7 +26,7 @@ public class SupplierServiceClient {
      * */
 
 //    @CircuitBreaker(name="supplier-service", fallbackMethod = "fallback")
-    public Supplier getSupplier(String supplierId){
+    public Mono<ProductSupplierResponse> getSupplier(String supplierId, ProductDTO product){
 
         return webClientBuilder.build()
                 .get()
@@ -31,7 +34,7 @@ public class SupplierServiceClient {
                 .retrieve()
                 .bodyToMono(Supplier.class)
                 .onErrorReturn(new Supplier())
-                .block();
+                .flatMap(supplier -> Mono.just(new ProductSupplierResponse(product, supplier)));
     }
 //    public Supplier fallback(String supplierId, Throwable throwable){
 //        System.out.println("Service is currently busy. Please try again later.");
