@@ -7,7 +7,6 @@ import com.czerniecka.order.dto.OrderMapper;
 import com.czerniecka.order.entity.Order;
 import com.czerniecka.order.repository.OrderRepository;
 import com.czerniecka.order.vo.Inventory;
-import com.czerniecka.order.vo.Product;
 import com.czerniecka.order.vo.OrderProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,22 +38,17 @@ public class OrderService {
 
     /**
      * If product-service is not available method returns:
-     * Order with empty Product object
+     * Mono of OrderProductResponse
+     * with Order object and empty Product object
      * <p>
      * If order is not found returns Mono.empty
      */
     public Mono<OrderProductResponse> getOrderWithProduct(String orderId) {
-        OrderProductResponse response = new OrderProductResponse();
-        Mono<Order> order = orderRepository.findById(orderId);
-        return order.switchIfEmpty(Mono.empty())
-                .flatMap(
-                        o -> {
-                            Mono<Product> product = productServiceClient.getProduct(o.getProductId());
-                            response.setOrder(orderMapper.toOrderDTO(o));
-                            response.setProduct(product);
-                            return Mono.just(response);
-                        });
+        Mono<Order> orderMono = orderRepository.findById(orderId);
+        return orderMono.switchIfEmpty(Mono.empty())
+                .flatMap(o -> productServiceClient.getProduct(o.getProductId(), orderMapper.toOrderDTO(o)));
     }
+
     public Mono<OrderDTO> save(OrderDTO orderDTO) {
 
         Order order = orderMapper.toOrder(orderDTO);
