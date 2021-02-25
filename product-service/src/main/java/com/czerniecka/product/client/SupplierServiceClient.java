@@ -19,12 +19,7 @@ public class SupplierServiceClient {
     public SupplierServiceClient(WebClient.Builder webClientBuilder) {
         this.webClientBuilder = webClientBuilder;
     }
-
-    /**
-     * For project simplicity GET supplier
-     * will be subscribed in a  blocking way
-     * */
-
+    
 //    @CircuitBreaker(name="supplier-service", fallbackMethod = "fallback")
     public Mono<ProductSupplierResponse> getSupplier(String supplierId, ProductDTO product){
 
