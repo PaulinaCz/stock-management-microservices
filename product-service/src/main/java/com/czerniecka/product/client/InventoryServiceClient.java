@@ -20,7 +20,7 @@ public class InventoryServiceClient {
         this.webClientBuilder = webClientBuilder;
     }
     
-    @CircuitBreaker(name="inventory-service", fallbackMethod = "fallback")
+//    @CircuitBreaker(name="inventory-service", fallbackMethod = "fallback")
     public Mono<Inventory> postInventory(Inventory inventory){
 
         return webClientBuilder.build()
@@ -34,7 +34,7 @@ public class InventoryServiceClient {
                 ));
 
     }
-    public Mono<Inventory> fallback(Inventory inventory, Throwable throwable){
-        return Mono.error(new ServiceUnavailableException("Error while creating product inventory. Product not saved."));
-    }
+//    public Mono<Inventory> fallback(Inventory inventory, Throwable throwable){
+//        return Mono.error(new ServiceUnavailableException("Error while creating product inventory. Product not saved."));
+//    }
 }

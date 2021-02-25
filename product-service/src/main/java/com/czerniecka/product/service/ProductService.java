@@ -61,10 +61,12 @@ public class ProductService {
     }
 
     /**
+     * If product is not found returns empty Mono
+     * which will return "Product not found error" in controller
+     *
      * If supplier-service is not available method returns:
      * Product with empty Supplier object
-     * <p>
-     * If product is not found returns Mono.empty
+     *
      */
     public Mono<ProductSupplierResponse> getProductWithSupplier(String productId) {
         var response = new ProductSupplierResponse();
@@ -76,7 +78,13 @@ public class ProductService {
                     return Mono.just(response);
                 });
     }
-    
+
+    /**
+     * On save Product p  new Inventory for p should be created
+     *                      ->
+     *  if new Inventory is successfully created and saved in db -> Product p is saved to db,
+     *  else -> none of transactions is saved to db.
+     * */
     public Mono<ProductDTO> save(CreateProductDTO productDTO) {
 
         Product product = productMapper.toCreateProduct(productDTO);
