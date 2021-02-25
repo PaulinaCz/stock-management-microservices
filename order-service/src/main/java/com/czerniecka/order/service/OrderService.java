@@ -44,8 +44,8 @@ public class OrderService {
      * If order is not found returns Mono.empty
      */
     public Mono<OrderProductResponse> getOrderWithProduct(String orderId) {
-        Mono<Order> orderMono = orderRepository.findById(orderId);
-        return orderMono.switchIfEmpty(Mono.empty())
+        var order = orderRepository.findById(orderId);
+        return order.switchIfEmpty(Mono.empty())
                 .flatMap(o -> productServiceClient.getProduct(o.getProductId(), orderMapper.toOrderDTO(o)));
     }
 
