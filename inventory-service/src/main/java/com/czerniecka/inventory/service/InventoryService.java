@@ -21,7 +21,8 @@ public class InventoryService {
     private final ProductServiceClient productServiceClient;
 
     @Autowired
-    public InventoryService(InventoryRepository inventoryRepository, InventoryMapper inventoryMapper, ProductServiceClient productServiceClient) {
+    public InventoryService(InventoryRepository inventoryRepository, InventoryMapper inventoryMapper
+            , ProductServiceClient productServiceClient) {
         this.inventoryRepository = inventoryRepository;
         this.inventoryMapper = inventoryMapper;
         this.productServiceClient = productServiceClient;
@@ -34,10 +35,10 @@ public class InventoryService {
     }
 
     /**
-     *  When product-service is not available method returns 
-     *  Flux of InventoryProductResponse
-     *  where each IPR has
-     *  Inventory object and empty Product object
+     * When product-service is not available method returns
+     * Flux of InventoryProductResponse
+     * where each IPR has
+     * Inventory object and empty Product object
      */
     public Flux<InventoryProductResponse> findAllWithProducts() {
         Flux<Inventory> inventories = inventoryRepository.findAll();
@@ -48,17 +49,17 @@ public class InventoryService {
     }
 
     /**
-     *  If product-service is not available method returns:
-     *  Mono of InventoryProductResponse
-     *  with Inventory object and empty Product object
-     *
-     *  If inventory is not found returns empty Mono
-     *  which will return "Inventory not found error" in controller
+     * If product-service is not available method returns:
+     * Mono of InventoryProductResponse
+     * with Inventory object and empty Product object
+     * <p>
+     * If inventory is not found returns empty Mono
+     * which will return "Inventory not found error" in controller
      */
     public Mono<InventoryProductResponse> findInventoryById(String inventoryId) {
         var inventory = inventoryRepository.findById(inventoryId);
         return inventory.switchIfEmpty(Mono.empty())
-                .flatMap(i -> productServiceClient.getProduct(inventoryId, inventoryMapper.toInventoryDTO(i)));
+                .flatMap(i -> productServiceClient.getProduct(i.getProductId(), inventoryMapper.toInventoryDTO(i)));
     }
 
     public Mono<InventoryDTO> findInventoryByProductId(String productId) {
@@ -73,16 +74,14 @@ public class InventoryService {
     }
 
     public Mono<InventoryDTO> updateInventory(String inventoryId, InventoryDTO inventoryDTO) {
-        
+
         return inventoryRepository.findById(inventoryId)
                 .switchIfEmpty(Mono.empty())
                 .flatMap(inventory -> {
-                            inventory.setQuantity(inventoryDTO.getQuantity());
-                            inventory.setLastModified(LocalDateTime.now());
-                            Mono<Inventory> updated = inventoryRepository.save(inventory);
-                            return updated.map(inventoryMapper::toInventoryDTO);
-                        });
+                    inventory.setQuantity(inventoryDTO.getQuantity());
+                    inventory.setLastModified(LocalDateTime.now());
+                    Mono<Inventory> updated = inventoryRepository.save(inventory);
+                    return updated.map(inventoryMapper::toInventoryDTO);
+                });
     }
-
-
 }
