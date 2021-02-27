@@ -50,7 +50,7 @@ public class InvoiceService {
         var invoice= invoiceRepository.findById(invoiceId);
 
         return invoice.switchIfEmpty(Mono.empty())
-                .flatMap(i -> productServiceClient.getProduct(invoiceId, invoiceMapper.toInvoiceDTO(i)));
+                .flatMap(i -> productServiceClient.getProduct(i.getProductId(), invoiceMapper.toInvoiceDTO(i)));
 
     }
 
