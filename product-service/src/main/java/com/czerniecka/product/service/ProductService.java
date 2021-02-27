@@ -48,7 +48,6 @@ public class ProductService {
     public Flux<ProductDTO> findProductsWhereCategoryContains(String category) {
 
         Flux<Product> allByCategory = productRepository.findProductByCategoryContaining(category);
-
         return allByCategory.map(productMapper::toProductDTO);
 
     }
@@ -56,7 +55,6 @@ public class ProductService {
     public Flux<ProductDTO> findProductsBySupplier(String supplierId) {
 
         Flux<Product> allBySupplierId = productRepository.findAllBySupplierId(supplierId);
-
         return allBySupplierId.map(productMapper::toProductDTO);
     }
 
@@ -76,15 +74,16 @@ public class ProductService {
 
     /**
      * On save Product p  new Inventory for p should be created
-     *                      ->
-     *  if new Inventory is successfully created and saved in db -> Product p is saved to db,
+     *                          ->
+     *  If new Inventory is successfully created and saved in db
+     *  -> Product p is saved to db,
      *  else -> none of transactions is saved to db.
+     *
      * */
     public Mono<ProductDTO> save(CreateProductDTO productDTO) {
 
-        Product product = productMapper.toCreateProduct(productDTO);
-
-        Inventory inventory = new Inventory();
+        var product = productMapper.toCreateProduct(productDTO);
+        var inventory = new Inventory();
         inventory.setProductId(product.getId());
         inventory.setQuantity(0);
 

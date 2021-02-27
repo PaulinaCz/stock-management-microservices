@@ -59,7 +59,6 @@ public class ProductController {
 
         return productService.getProductWithSupplier(productId)
                 .switchIfEmpty(Mono.error(new ProductNotFound(productId)));
-        
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -72,8 +71,6 @@ public class ProductController {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(ProductNotFound.class)
     public Map<String, Object> handleNotFound(ProductNotFound e){
-
-
         Map<String, Object> errorBody = new HashMap<>();
 
         errorBody.put("timestamp", LocalDateTime.now());
@@ -84,9 +81,7 @@ public class ProductController {
 
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
     @ExceptionHandler(ServiceUnavailableException.class)
-    public Map<String, Object> handleNotFound(ServiceUnavailableException e){
-
-
+    public Map<String, Object> handleServiceNotAvailable(ServiceUnavailableException e){
         Map<String, Object> errorBody = new HashMap<>();
 
         errorBody.put("timestamp", LocalDateTime.now());
