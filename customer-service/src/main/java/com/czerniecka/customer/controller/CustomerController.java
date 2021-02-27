@@ -38,7 +38,6 @@ public class CustomerController {
 
         return customerService.findCustomerById(customerId)
                 .switchIfEmpty(Mono.error(new CustomerNotFound(customerId)));
-
     }
 
     @ResponseStatus(HttpStatus.CREATED)
