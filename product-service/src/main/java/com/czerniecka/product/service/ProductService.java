@@ -71,7 +71,7 @@ public class ProductService {
     public Mono<ProductSupplierResponse> getProductWithSupplier(String productId) {
         var product = productRepository.findById(productId);
         return product.switchIfEmpty(Mono.empty())
-                .flatMap(p -> supplierServiceClient.getSupplier(productId, productMapper.toProductDTO(p)));
+                .flatMap(p -> supplierServiceClient.getSupplier(p.getSupplierId(), productMapper.toProductDTO(p)));
     }
 
     /**
