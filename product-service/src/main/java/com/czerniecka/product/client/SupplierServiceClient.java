@@ -3,25 +3,25 @@ package com.czerniecka.product.client;
 import com.czerniecka.product.dto.ProductDTO;
 import com.czerniecka.product.vo.ProductSupplierResponse;
 import com.czerniecka.product.vo.Supplier;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-
-import javax.naming.ServiceUnavailableException;
 
 @Service
 public class SupplierServiceClient {
 
     private WebClient.Builder webClientBuilder;
 
+    private final ReactiveCircuitBreakerFactory cbFactory;
+
     @Autowired
-    public SupplierServiceClient(WebClient.Builder webClientBuilder) {
+    public SupplierServiceClient(WebClient.Builder webClientBuilder, ReactiveCircuitBreakerFactory cbFactory) {
         this.webClientBuilder = webClientBuilder;
+        this.cbFactory = cbFactory;
     }
-    
-    @CircuitBreaker(name="supplier-service-cb", fallbackMethod = "supplierFallback")
+
     public Mono<ProductSupplierResponse> getSupplier(String supplierId, ProductDTO product){
 
         return webClientBuilder.build()
@@ -29,12 +29,10 @@ public class SupplierServiceClient {
                 .uri("http://supplier-service/suppliers/" + supplierId)
                 .retrieve()
                 .bodyToMono(Supplier.class)
-                .onErrorReturn(new Supplier())
-                .flatMap(supplier -> Mono.just(new ProductSupplierResponse(product, supplier)));
+                .flatMap(supplier -> Mono.just(new ProductSupplierResponse(product, supplier)))
+                .transform(
+                        it -> cbFactory.create("supplier-service-cb")
+                                .run(it, throwable -> Mono.just(new ProductSupplierResponse(product, new Supplier())))
+                );
     }
-
-    public Mono<ProductSupplierResponse> supplierFallback(String supplierId, ProductDTO product, Throwable throwable){
-        return Mono.error(new ServiceUnavailableException("Service is currently busy. Please try again later."));
-    }
-
 }
