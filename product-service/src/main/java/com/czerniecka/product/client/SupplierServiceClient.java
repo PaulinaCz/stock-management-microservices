@@ -33,7 +33,7 @@ public class SupplierServiceClient {
                 .flatMap(supplier -> Mono.just(new ProductSupplierResponse(product, supplier)));
     }
 
-    public Mono<ProductSupplierResponse> supplierFallback(String supplierId, Throwable throwable){
+    public Mono<ProductSupplierResponse> supplierFallback(String supplierId, ProductDTO product, Throwable throwable){
         return Mono.error(new ServiceUnavailableException("Service is currently busy. Please try again later."));
     }
 
