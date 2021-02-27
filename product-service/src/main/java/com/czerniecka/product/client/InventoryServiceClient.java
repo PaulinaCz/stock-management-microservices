@@ -13,13 +13,12 @@ import javax.naming.ServiceUnavailableException;
 public class InventoryServiceClient {
 
     private WebClient.Builder webClientBuilder;
-
-    @Autowired
     private ReactiveCircuitBreakerFactory cbFactory;
 
     @Autowired
-    public InventoryServiceClient(WebClient.Builder webClientBuilder) {
+    public InventoryServiceClient(WebClient.Builder webClientBuilder, ReactiveCircuitBreakerFactory cbFactory) {
         this.webClientBuilder = webClientBuilder;
+        this.cbFactory = cbFactory;
     }
 
     public Mono<Inventory> postInventory(Inventory inventory){
