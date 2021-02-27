@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import javax.naming.ServiceUnavailableException;
+
 
 @Service
 public class ProductServiceClient {
@@ -20,7 +22,7 @@ public class ProductServiceClient {
         this.webClientBuilder = webClientBuilder;
     }
 
-//    @CircuitBreaker(name= "product-service", fallbackMethod = "fallback")
+    @CircuitBreaker(name= "product-service-cb", fallbackMethod = "productFallback")
     public Mono<InventoryProductResponse> getProduct(String  productId, InventoryDTO inventory){
         
         return webClientBuilder.build()
@@ -31,8 +33,8 @@ public class ProductServiceClient {
                 .onErrorReturn(new Product())
                 .flatMap(product -> Mono.just(new InventoryProductResponse(inventory, product)));
     }
-//
-//    public Mono<Product> fallback(String  productId, Throwable throwable){
-//        return Mono.error(new ServiceUnavailableException("Service is currently busy. Please try again later."));
-//    }
+
+    public Mono<InventoryProductResponse> productFallback(String  productId, InventoryDTO inventory, Throwable throwable){
+        return Mono.error(new ServiceUnavailableException("Service is currently busy. Please try again later."));
+    }
 }
