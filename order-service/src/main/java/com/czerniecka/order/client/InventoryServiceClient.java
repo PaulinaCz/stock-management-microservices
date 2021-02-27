@@ -11,7 +11,6 @@ import reactor.core.publisher.Mono;
 
 import javax.naming.ServiceUnavailableException;
 
-
 @Service
 public class InventoryServiceClient {
 
@@ -22,7 +21,7 @@ public class InventoryServiceClient {
         this.webClientBuilder = webClientBuilder;
     }
 
-    @CircuitBreaker(name = "inventory-service", fallbackMethod = "fallbackUpdate")
+    @CircuitBreaker(name = "inventory-service-cb", fallbackMethod = "fallbackUpdate")
     public Mono<Inventory> updateInventory(OrderDTO orderDTO) {
 
         return webClientBuilder.build()
