@@ -51,7 +51,6 @@ public class InventoryController {
     public Mono<InventoryDTO> getInventoryByProductId(@PathVariable("id") String productId){
         return inventoryService.findInventoryByProductId(productId)
                 .switchIfEmpty(Mono.error(new InventoryNotFound("for product " + productId)));
-
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -72,7 +71,7 @@ public class InventoryController {
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(InventoryNotFound.class)
-    public Map<String, Object> handleNotFound(Exception ex){
+    public Map<String, Object> handleNotFound(InventoryNotFound ex){
 
         Map<String, Object> errorBody = new HashMap<>();
 
