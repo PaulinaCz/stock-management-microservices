@@ -6,7 +6,6 @@ import com.czerniecka.order.dto.OrderDTO;
 import com.czerniecka.order.dto.OrderMapper;
 import com.czerniecka.order.entity.Order;
 import com.czerniecka.order.repository.OrderRepository;
-import com.czerniecka.order.vo.Inventory;
 import com.czerniecka.order.vo.OrderProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,7 +40,8 @@ public class OrderService {
      * Mono of OrderProductResponse
      * with Order object and empty Product object
      * <p>
-     * If order is not found returns Mono.empty
+     * If order is not found returns empty Mono
+     * which will then return "Order not found error" in controller
      */
     public Mono<OrderProductResponse> getOrderWithProduct(String orderId) {
         var order = orderRepository.findById(orderId);
@@ -49,15 +49,22 @@ public class OrderService {
                 .flatMap(o -> productServiceClient.getProduct(o.getProductId(), orderMapper.toOrderDTO(o)));
     }
 
+    /**
+     * On save Order o Inventory for o product should be updated
+     *
+     * When trying to place order of amount higher than available in stock
+     * -> error is thrown and none of db transactions is proceed.
+     *
+     * On successful inventory update -> Order o is saved to db
+     * else -> save method on OrderRepository is never invoked
+     * and error is thrown.
+     * */
     public Mono<OrderDTO> save(OrderDTO orderDTO) {
 
-        Order order = orderMapper.toOrder(orderDTO);
-
-        Mono<Inventory> inventoryMono = inventoryServiceClient.updateInventory(orderDTO);
-
+        var order = orderMapper.toOrder(orderDTO);
+        var inventoryMono = inventoryServiceClient.updateInventory(orderDTO);
         return inventoryMono.switchIfEmpty(Mono.empty())
                 .flatMap(i -> orderRepository.save(order).map(orderMapper::toOrderDTO));
-
     }
 //
 //    public void updateOrderStatus(String orderId, String orderStatus) {

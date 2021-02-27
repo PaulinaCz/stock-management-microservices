@@ -33,7 +33,6 @@ public class OrderController {
     @GetMapping("")
     public Flux<OrderDTO> getAllOrders(){
         return orderService.findAll();
-
     }
 
     @ResponseStatus(HttpStatus.OK)
@@ -42,7 +41,6 @@ public class OrderController {
         
         return orderService.getOrderWithProduct(orderId)
                 .switchIfEmpty(Mono.error(new OrderNotFound(orderId)));
-
     }
 
     @ResponseStatus(HttpStatus.CREATED)
