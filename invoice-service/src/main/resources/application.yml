@@ -7,5 +7,12 @@ resilience4j:
         permittedNumberOfCallsInHalfOpenState: 5
         waitDurationInOpenState: 60s
         failureRateThreshold: 50
-        recordExceptions:
-          - org.springframework.web.client.HttpServerErrorException
+        ignoreExceptions:
+          - org.springframework.web.bind.MethodArgumentNotValidException
+          - com.czerniecka.invoice.exceptions.InvoiceNotFound
+      instances:
+        product-service-cb:
+          baseConfig: default
+        inventory-service-cb:
+          baseConfig: default
+

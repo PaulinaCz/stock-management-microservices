@@ -20,7 +20,7 @@ public class InventoryServiceClient {
         this.webClientBuilder = webClientBuilder;
     }
 
-    @CircuitBreaker(name = "inventory-service", fallbackMethod = "fallbackUpdate")
+    @CircuitBreaker(name = "inventory-service-cb", fallbackMethod = "fallbackUpdate")
     public Mono<Inventory> updateInventory(InvoiceDTO invoiceDTO) {
 
         return webClientBuilder.build()

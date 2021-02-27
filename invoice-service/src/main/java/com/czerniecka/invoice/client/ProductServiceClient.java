@@ -22,7 +22,7 @@ public class ProductServiceClient {
         this.webClientBuilder = webClientBuilder;
     }
 
-//    @CircuitBreaker(name = "product-service", fallbackMethod = "fallback")
+    @CircuitBreaker(name = "product-service-cb", fallbackMethod = "productFallback")
     public Mono<InvoiceProductResponse> getProduct(String productId, InvoiceDTO invoice) {
 
         return webClientBuilder.build()
@@ -34,8 +34,7 @@ public class ProductServiceClient {
                 .flatMap(product -> Mono.just(new InvoiceProductResponse(invoice, product)));
     }
 
-//    public Mono<Product> fallback(String productId, Throwable throwable) {
-//        return Mono.error(new ServiceUnavailableException("Service is currently busy. Please try again later."));
-//    }
-
+    public Mono<InvoiceProductResponse> productFallback(String productId, Throwable throwable) {
+        return Mono.error(new ServiceUnavailableException("Service is currently busy. Please try again later."));
+    }
 }
