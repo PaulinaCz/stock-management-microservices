@@ -40,7 +40,6 @@ public class InvoiceController {
         
         return invoiceService.getInvoiceWithProduct(invoiceId)
                 .switchIfEmpty(Mono.error(new InvoiceNotFound(invoiceId)));
-        
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -52,7 +51,7 @@ public class InvoiceController {
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(InvoiceNotFound.class)
-    public Map<String, Object> handleNotFound(Exception e){
+    public Map<String, Object> handleNotFound(InvoiceNotFound e){
 
         Map<String, Object> errorBody = new HashMap<>();
 
@@ -64,7 +63,7 @@ public class InvoiceController {
 
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
     @ExceptionHandler(ServiceUnavailableException.class)
-    public Map<String, Object> handleNotSaved(Exception e){
+    public Map<String, Object> handleNotSaved(ServiceUnavailableException e){
 
         Map<String, Object> errorBody = new HashMap<>();
 

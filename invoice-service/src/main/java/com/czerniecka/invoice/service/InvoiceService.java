@@ -6,7 +6,6 @@ import com.czerniecka.invoice.dto.InvoiceDTO;
 import com.czerniecka.invoice.dto.InvoiceMapper;
 import com.czerniecka.invoice.entity.Invoice;
 import com.czerniecka.invoice.repository.InvoiceRepository;
-import com.czerniecka.invoice.vo.Inventory;
 import com.czerniecka.invoice.vo.InvoiceProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -53,18 +52,18 @@ public class InvoiceService {
                 .flatMap(i -> productServiceClient.getProduct(i.getProductId(), invoiceMapper.toInvoiceDTO(i)));
 
     }
-
     /**
-     * If inventory-service is not available while calling on GET/PUT method - fallback method will return empty Inventory object.
-     * If save method receives empty Invoice object, it reverses save invoice to database.
+     * On save Invoice i Inventory for i product should be updated
      *
-     * If PUT method on inventory-service is successful - both database changes are committed.
+     * On successful inventory update -> Invoice i is saved to db
+     * else -> save method on InvoiceRepository is never invoked
+     * and error is thrown.
+     *
      */
     public Mono<InvoiceDTO> save(InvoiceDTO invoiceDTO) {
         
-        Invoice invoice = invoiceMapper.toInvoice(invoiceDTO);
-
-        Mono<Inventory> inventoryMono = inventoryServiceClient.updateInventory(invoiceDTO);
+        var invoice = invoiceMapper.toInvoice(invoiceDTO);
+        var inventoryMono = inventoryServiceClient.updateInventory(invoiceDTO);
         
         return inventoryMono.switchIfEmpty(Mono.empty())
                 .flatMap(i -> invoiceRepository.save(invoice).map(invoiceMapper::toInvoiceDTO));
