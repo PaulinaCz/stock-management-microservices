@@ -3,7 +3,6 @@ package com.czerniecka.order.client;
 import com.czerniecka.order.dto.OrderDTO;
 import com.czerniecka.order.exceptions.ItemNotAvailable;
 import com.czerniecka.order.vo.Inventory;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreaker;
 import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
