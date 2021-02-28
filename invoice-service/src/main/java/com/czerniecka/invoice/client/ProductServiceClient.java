@@ -31,7 +31,6 @@ public class ProductServiceClient {
                 .uri("http://product-service/products/" + productId)
                 .retrieve()
                 .bodyToMono(Product.class)
-                .onErrorReturn(new Product())
                 .flatMap(product -> Mono.just(new InvoiceProductResponse(invoice, product)));
 
         return rcb.run(response, throwable -> Mono.just(new InvoiceProductResponse(invoice, new Product())));
