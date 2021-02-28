@@ -62,7 +62,7 @@ public class OrderService {
     public Mono<OrderDTO> save(OrderDTO orderDTO) {
 
         var order = orderMapper.toOrder(orderDTO);
-        var inventoryMono = inventoryServiceClient.updateInventory(orderDTO);
+        var inventoryMono = inventoryServiceClient.update(orderDTO);
         return inventoryMono.switchIfEmpty(Mono.empty())
                 .flatMap(i -> orderRepository.save(order).map(orderMapper::toOrderDTO));
     }

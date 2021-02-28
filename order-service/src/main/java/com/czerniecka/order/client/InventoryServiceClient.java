@@ -24,31 +24,41 @@ public class InventoryServiceClient {
         this.rcb = cbFactory.create("inventory-service-cb");
     }
 
-    public Mono<Inventory> updateInventory(OrderDTO orderDTO) {
+    public Mono<Inventory> getInventory(OrderDTO orderDTO) {
 
-        return webClientBuilder.build()
+        Mono<Inventory> i = webClientBuilder.build()
                 .get()
                 .uri("http://inventory-service/inventories/product/" + orderDTO.getProductId())
                 .retrieve()
-                .bodyToMono(Inventory.class)
-                .onErrorResume(e -> Mono.error(
-                        new ServiceUnavailableException("Service is currently busy. Please try again later")
-                ))
-                .flatMap(inventory -> {
-                    if(inventory.getQuantity() > orderDTO.getAmount()) {
-                        inventory.setQuantity(inventory.getQuantity() - orderDTO.getAmount());
+                .bodyToMono(Inventory.class);
+
+        return rcb.run(i, throwable ->
+                Mono.error(new ServiceUnavailableException("Service is currently busy. Please try again later")));
+    }
+
+    public Mono<Inventory> update(OrderDTO orderDTO) {
+
+        Mono<Inventory> inventory = getInventory(orderDTO)
+                .flatMap(i -> {
+                    if (i.getQuantity() > orderDTO.getAmount()) {
+                        i.setQuantity(i.getQuantity() - orderDTO.getAmount());
                         return webClientBuilder.build()
                                 .put()
-                                .uri("http://inventory-service/inventories/" + inventory.getId())
-                                .body(Mono.just(inventory), Inventory.class)
+                                .uri("http://inventory-service/inventories/" + i.getId())
+                                .body(Mono.just(i), Inventory.class)
                                 .retrieve()
-                                .bodyToMono(Inventory.class)
-                                .onErrorResume(e -> Mono.error(
-                                        new ServiceUnavailableException("Error while proceeding order, please try again later.")
-                                ));
-                    }else{
+                                .bodyToMono(Inventory.class);
+                    } else {
                         return Mono.error(new ItemNotAvailable("Not enough items in stock."));
                     }
                 });
+
+        return rcb.run(inventory, throwable -> {
+            if (throwable.getMessage().equals("Not enough items in stock.")) {
+                return Mono.error(new ItemNotAvailable("Not enough items in stock."));
+            } else {
+                return Mono.error(new ServiceUnavailableException("Error while proceeding order, please try again later."));
+            }
+        });
     }
 }
