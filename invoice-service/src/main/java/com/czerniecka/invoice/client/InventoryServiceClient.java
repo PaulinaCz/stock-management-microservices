@@ -23,16 +23,22 @@ public class InventoryServiceClient {
         this.rcb = cbFactory.create("inventory-service-cb");
     }
 
-    public Mono<Inventory> updateInventory(InvoiceDTO invoiceDTO) {
+    public Mono<Inventory> getInventory(InvoiceDTO invoiceDTO) {
 
-        return webClientBuilder.build()
+        Mono<Inventory> inventoryMono = webClientBuilder.build()
                 .get()
                 .uri("http://inventory-service/inventories/product/" + invoiceDTO.getProductId())
                 .retrieve()
-                .bodyToMono(Inventory.class)
-                .onErrorResume(e -> Mono.error(
-                        new ServiceUnavailableException("Service is currently busy. Please try again later")
-                ))
+                .bodyToMono(Inventory.class);
+
+        return rcb.run(inventoryMono, throwable ->
+                Mono.error(new ServiceUnavailableException("Service is currently busy. Please try again later")));
+
+    }
+
+    public Mono<Inventory> update(InvoiceDTO invoiceDTO) {
+
+        Mono<Inventory> i = getInventory(invoiceDTO)
                 .flatMap(inventory -> {
                     inventory.setQuantity(inventory.getQuantity() + invoiceDTO.getAmount());
                     return webClientBuilder.build()
@@ -40,10 +46,11 @@ public class InventoryServiceClient {
                             .uri("http://inventory-service/inventories/" + inventory.getId())
                             .body(Mono.just(inventory), Inventory.class)
                             .retrieve()
-                            .bodyToMono(Inventory.class)
-                            .onErrorResume(e -> Mono.error(
-                                    new ServiceUnavailableException("Error while processing invoice, please try again later.")
-                            ));
+                            .bodyToMono(Inventory.class);
+
                 });
+
+        return rcb.run(i, throwable ->
+                Mono.error(new ServiceUnavailableException("Error while processing invoice, please try again later.")));
     }
 }

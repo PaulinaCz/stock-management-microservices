@@ -63,7 +63,7 @@ public class InvoiceService {
     public Mono<InvoiceDTO> save(InvoiceDTO invoiceDTO) {
         
         var invoice = invoiceMapper.toInvoice(invoiceDTO);
-        var inventoryMono = inventoryServiceClient.updateInventory(invoiceDTO);
+        var inventoryMono = inventoryServiceClient.update(invoiceDTO);
         
         return inventoryMono.switchIfEmpty(Mono.empty())
                 .flatMap(i -> invoiceRepository.save(invoice).map(invoiceMapper::toInvoiceDTO));
