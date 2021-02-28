@@ -2,8 +2,9 @@ package com.czerniecka.invoice.client;
 
 import com.czerniecka.invoice.dto.InvoiceDTO;
 import com.czerniecka.invoice.vo.Inventory;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreaker;
+import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -14,13 +15,14 @@ import javax.naming.ServiceUnavailableException;
 public class InventoryServiceClient {
 
     private WebClient.Builder webClientBuilder;
+    final ReactiveCircuitBreaker rcb;
 
     @Autowired
-    public InventoryServiceClient(WebClient.Builder webClientBuilder) {
+    public InventoryServiceClient(WebClient.Builder webClientBuilder, ReactiveCircuitBreakerFactory cbFactory) {
         this.webClientBuilder = webClientBuilder;
+        this.rcb = cbFactory.create("inventory-service-cb");
     }
 
-    @CircuitBreaker(name = "inventory-service-cb", fallbackMethod = "fallbackUpdate")
     public Mono<Inventory> updateInventory(InvoiceDTO invoiceDTO) {
 
         return webClientBuilder.build()
@@ -44,9 +46,4 @@ public class InventoryServiceClient {
                             ));
                 });
     }
-
-    public Mono<Inventory> fallbackUpdate(InvoiceDTO invoiceDTO, Throwable throwable) {
-        return Mono.error(new ServiceUnavailableException("Error while processing invoice, please try again later."));
-    }
-
 }
