@@ -5,6 +5,8 @@ import com.czerniecka.order.exceptions.ItemNotAvailable;
 import com.czerniecka.order.vo.Inventory;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreaker;
+import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -15,13 +17,14 @@ import javax.naming.ServiceUnavailableException;
 public class InventoryServiceClient {
 
     private WebClient.Builder webClientBuilder;
+    final ReactiveCircuitBreaker rcb;
 
     @Autowired
-    public InventoryServiceClient(WebClient.Builder webClientBuilder) {
+    public InventoryServiceClient(WebClient.Builder webClientBuilder, ReactiveCircuitBreakerFactory cbFactory) {
         this.webClientBuilder = webClientBuilder;
+        this.rcb = cbFactory.create("inventory-service-cb");
     }
 
-    @CircuitBreaker(name = "inventory-service-cb", fallbackMethod = "fallbackUpdate")
     public Mono<Inventory> updateInventory(OrderDTO orderDTO) {
 
         return webClientBuilder.build()
@@ -48,9 +51,5 @@ public class InventoryServiceClient {
                         return Mono.error(new ItemNotAvailable("Not enough items in stock."));
                     }
                 });
-    }
-
-    public Mono<Inventory> fallbackUpdate(OrderDTO orderDTO, Throwable throwable) {
-        return Mono.error(new ServiceUnavailableException("Error while proceeding order, please try again later."));
     }
 }
